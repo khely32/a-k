@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\Inventory;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Support\Facades\DB;
@@ -163,14 +164,23 @@ class PosController extends Controller
                     'branch_id'      => auth()->user()->branch_id,
                 ]);
 
+                $branchId = auth()->user()->branch_id;
+
                 foreach ($cart as $productId => $item) {
                     $product = Product::findOrFail($productId);
 
-                    if ($product->quantity < $item['qty']) {
+                    $inventory = Inventory::firstOrCreate(
+                        ['product_id' => $productId, 'branch_id' => $branchId],
+                        ['quantity' => 0]
+                    );
+
+                    $inventoryQty = (int) $inventory->quantity;
+                    if ($inventoryQty < $item['qty']) {
                         throw new \Exception("Insufficient stock for: " . $product->name);
                     }
 
-                    // Deduct stock
+                    // Decrement sales from the selling branch's inventory (source of truth)
+                    $inventory->decrement('quantity', $item['qty']);
                     $product->decrement('quantity', $item['qty']);
 
                     // Save sale item

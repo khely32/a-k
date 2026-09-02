@@ -79,42 +79,15 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Account Type</label>
+                            <label class="form-label">Assigned Branch</label>
 
-                            <select
-                                name="role"
-                                id="role"
-                                class="form-select"
-                                onchange="toggleBranch()"
-                                required>
-
-                                <option value="">
-                                    Select Role
-                                </option>
-
-                                <option value="owner">
-                                    Owner
-                                </option>
-
-                                <option value="staff">
-                                    Staff
-                                </option>
-
-                            </select>
-                        </div>
-
-                        <div id="branch-section" style="display:none;">
-
-                            <div class="mb-3">
-
-                                <label class="form-label">
-                                    Assigned Branch
-                                </label>
+                            <div id="branch-section" style="display:block;">
 
                                 <select
                                     name="branch"
                                     id="branch"
-                                    class="form-select">
+                                    class="form-select"
+                                    required>
 
                                     <option value="">
                                         Select Branch
@@ -139,7 +112,6 @@
                                 </select>
 
                             </div>
-
                         </div>
 
                         <button
@@ -170,26 +142,5 @@
 
     </div>
 </div>
-
-<script>
-function toggleBranch()
-{
-    let role = document.getElementById('role').value;
-    let branchSection = document.getElementById('branch-section');
-    let branchField = document.getElementById('branch');
-
-    if(role === 'staff')
-    {
-        branchSection.style.display = 'block';
-        branchField.required = true;
-    }
-    else
-    {
-        branchSection.style.display = 'none';
-        branchField.required = false;
-        branchField.value = '';
-    }
-}
-</script>
 
 @endsection

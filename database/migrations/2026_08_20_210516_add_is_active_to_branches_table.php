@@ -8,9 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('branches', function (Blueprint $table) {
-            $table->boolean('is_active')->default(true)->after('branch_name');
-        });
+        if (!Schema::hasColumn('branches', 'is_active')) {
+            Schema::table('branches', function (Blueprint $table) {
+                $table->boolean('is_active')->default(true)->after('branch_name');
+            });
+        }
     }
 
     public function down(): void

@@ -1,0 +1,15 @@
+.git
+.gitignore
+node_modules
+vendor
+npm-debug.log
+.idea
+.vscode
+storage/*.key
+.env
+!.env.docker
+public/build
+database/database.sqlite
+*.dump
+docker-compose.yml
+Dockerfile

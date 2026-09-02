@@ -165,28 +165,19 @@ class StockTransferController extends Controller
         $transferQty  = $stockTransfer->quantity;
 
         $product = Product::findOrFail($productId);
-        $isHomeBranch = ((int) $fromBranchId === 8);
 
         $sourceInventory = Inventory::firstOrCreate(
             ['product_id' => $productId, 'branch_id' => $fromBranchId],
-            ['quantity' => ($isHomeBranch && isset($product->quantity)) ? $product->quantity : 0]
+            ['quantity' => 0]
         );
-
-        if ($isHomeBranch && isset($product->quantity) && $product->quantity > $sourceInventory->quantity) {
-            $sourceInventory->quantity = $product->quantity;
-            $sourceInventory->save();
-        }
 
         if ($sourceInventory->quantity < $transferQty) {
             return back()->with('error', "Transfer failed. Source branch only has {$sourceInventory->quantity} units available.");
         }
 
-        DB::transaction(function () use ($stockTransfer, $sourceInventory, $product, $productId, $fromBranchId, $toBranchId, $transferQty, $isHomeBranch) {
+        DB::transaction(function () use ($stockTransfer, $sourceInventory, $product, $productId, $fromBranchId, $toBranchId, $transferQty) {
             $sourceInventory->decrement('quantity', $transferQty);
-
-            if ($isHomeBranch) {
-                $product->decrement('quantity', $transferQty);
-            }
+            $product->decrement('quantity', $transferQty);
 
             $destInventory = Inventory::firstOrCreate(
                 ['product_id' => $productId, 'branch_id' => $toBranchId],

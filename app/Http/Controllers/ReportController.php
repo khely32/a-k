@@ -31,7 +31,8 @@ class ReportController extends Controller
 
         $user = Auth::user();
         $userBranchId = (int) $user->branch_id;
-        $isMainBranch = ($userBranchId === 8);
+        $userBranch = $userBranchId ? Branch::find($userBranchId) : null;
+        $isMainBranch = $userBranch && $userBranch->isMainBranch();
 
         return view('reports.index', array_merge($data, compact(
             'branches',
@@ -326,12 +327,7 @@ class ReportController extends Controller
         $months = 6;
         $now = Carbon::now('Asia/Manila');
 
-        $branchColors = [
-            8  => ['#10B981', 'Main Branch'],
-            9  => ['#06B6D4', 'Poblacion Branch'],
-            10 => ['#F59E0B', 'Sn. Matias Branch'],
-            11 => ['#8B5CF6', 'Banate Branch'],
-        ];
+        $palette = ['#10B981', '#06B6D4', '#F59E0B', '#8B5CF6', '#F43F5E', '#6366F1'];
 
         $monthLabels = [];
         for ($i = $months - 1; $i >= 0; $i--) {
@@ -364,6 +360,7 @@ class ReportController extends Controller
         }
 
         $analytics = [];
+        $branchIndex = 0;
 
         foreach ($branches as $br) {
             $bid = (int) $br->id;
@@ -385,8 +382,8 @@ class ReportController extends Controller
 
             $analytics[$bid] = [
                 'branch_id'       => $bid,
-                'branch_name'     => $bid == 8 ? 'Main Branch' : $br->branch_name,
-                'color'           => $branchColors[$bid][0] ?? '#94A3B8',
+                'branch_name'     => $br->isMainBranch() ? 'Main Branch' : $br->branch_name,
+                'color'           => $palette[$branchIndex % count($palette)],
                 'monthly'         => $monthly,
                 'total_revenue'   => round($revenue, 2),
                 'target'          => $target,
@@ -395,6 +392,8 @@ class ReportController extends Controller
                 'delta'           => round($delta, 2),
                 'growth_rate'     => $growthRate,
             ];
+
+            $branchIndex++;
         }
 
         $comparison = [];

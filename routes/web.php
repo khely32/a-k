@@ -28,10 +28,10 @@ Route::get('/', function () {
 */
 
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
+Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
 
 Route::get('/register', [LoginController::class, 'showRegisterForm'])->name('register');
-Route::post('/register', [LoginController::class, 'register']);
+Route::post('/register', [LoginController::class, 'register'])->middleware('throttle:5,1');
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
@@ -42,11 +42,11 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 */
 Route::prefix('forgot-password')->name('forgot.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showEmailForm'])->name('email');
-    Route::post('/send-code', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendCode'])->name('send');
+    Route::post('/send-code', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendCode'])->middleware('throttle:3,10')->name('send');
     Route::get('/enter-code', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showCodeForm'])->name('code');
-    Route::post('/verify-code', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'verifyCode'])->name('code.verify');
+    Route::post('/verify-code', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'verifyCode'])->middleware('throttle:5,10')->name('code.verify');
     Route::get('/reset', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showResetForm'])->name('reset');
-    Route::post('/reset-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'resetPassword'])->name('reset.update');
+    Route::post('/reset-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'resetPassword'])->middleware('throttle:5,10')->name('reset.update');
 });
 
 /*

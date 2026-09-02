@@ -8,7 +8,7 @@ use App\Models\Inventory;
 
 class InventoryBatch6Seeder extends Seeder
 {
-    protected $moroboroBranchId = 8;
+    protected $moroboroBranchId;
 
     protected $products = [
         ['name' => 'Shell Rimula R4 X 15W-40 Diesel Engine Oil (6L Promo Pack)', 'brand' => 'Shell', 'type' => 'Engine Oil', 'price' => 1750.00],
@@ -21,6 +21,7 @@ class InventoryBatch6Seeder extends Seeder
 
     public function run(): void
     {
+        $this->moroboroBranchId = \App\Models\Branch::whereRaw('LOWER(branch_name) LIKE ?', ['%moroboro%'])->value('id');
         $created = [];
         $skipped = [];
 

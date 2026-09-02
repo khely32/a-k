@@ -14,7 +14,10 @@ class ProductController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $isMainBranch = ($user->branch_id == 8);
+        $mainBranch = Branch::whereRaw('LOWER(branch_name) LIKE ?', ['%moroboro%'])
+            ->orWhereRaw('LOWER(branch_name) LIKE ?', ['%branch 1%'])
+            ->first();
+        $isMainBranch = $mainBranch && $user->branch_id == $mainBranch->id;
 
         if ($isMainBranch) {
             $branches = Branch::orderBy('id', 'asc')->get();

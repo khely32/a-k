@@ -8,7 +8,7 @@ use App\Models\Inventory;
 
 class MotorOilProductsBatch2Seeder extends Seeder
 {
-    protected $moroboroBranchId = 8;
+    protected $moroboroBranchId;
 
     protected $products = [
         ['name' => 'Slick Road Runner SAE 40 Motorcycle Engine Oil', 'brand' => 'Slick Lubricants', 'type' => 'Engine Oil', 'price' => 220.00],
@@ -28,6 +28,7 @@ class MotorOilProductsBatch2Seeder extends Seeder
 
     public function run(): void
     {
+        $this->moroboroBranchId = \App\Models\Branch::whereRaw('LOWER(branch_name) LIKE ?', ['%moroboro%'])->value('id');
         $created = [];
         $skipped = [];
 
