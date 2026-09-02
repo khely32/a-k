@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, docker-ize]
+    branches: [main, docker-ize, render-deploy]
   pull_request:
 
 jobs:
@@ -78,7 +78,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker image
+      - name: Build Docker image (compose/docker-ize)
         run: |
           docker build -t ak_app:ci .
           docker run --rm --entrypoint /bin/sh ak_app:ci -c "php -v && php -m | grep -i pdo_pgsql"
+
+      - name: Build Docker image (Render single-container)
+        run: |
+          docker build -f Dockerfile.render -t ak_app_render:ci .
+          docker run --rm --entrypoint /bin/sh ak_app_render:ci -c "php -v && php -m | grep -i pdo_pgsql && nginx -v"
