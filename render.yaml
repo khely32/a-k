@@ -1,7 +1,6 @@
 databases:
   - name: ak-db
     databaseName: a_k
-    user: postgres
     plan: free  # upgrade to "starter" for production/backups
 
 services:
