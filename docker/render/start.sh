@@ -13,8 +13,9 @@ export APP_KEY="$APP_KEY"
 
 # Ensure storage directories exist with correct ownership (Render uses ephemeral fs).
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
-touch storage/logs/laravel.log
-chown -R www-data:www-data storage bootstrap/cache
+mkdir -p storage/logs
+touch storage/logs/laravel.log 2>/dev/null || true
+chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 
 # Wait for database.
 echo "Waiting for database..."
