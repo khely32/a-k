@@ -14,9 +14,18 @@ class BranchSeeder extends Seeder
      */
     public function run(): void
     {
-        Branch::create(['branch_name' => 'Branch 1 - Moroboro', 'location' => 'Brgy Moroboro Dingle, Ilo-ilo']);
-        Branch::create(['branch_name' => 'Branch 2 - Poblacion', 'location' => 'Brgy. Poblacion Muyco St. Dingle, Ilo-ilo']);
-        Branch::create(['branch_name' => 'Branch 3 - San Matias', 'location' => 'Brgy. San Matias Dingle, Ilo-ilo']);
-        Branch::create(['branch_name' => 'Branch 4 - Banate', 'location' => 'Bularan St. Banate, Iloilo']);
+        $branches = [
+            ['branch_name' => 'Moroboro Branch', 'location' => 'Brgy Moroboro Dingle, Ilo-ilo'],
+            ['branch_name' => 'Poblacion Branch', 'location' => 'Brgy. Poblacion Muyco St. Dingle, Ilo-ilo'],
+            ['branch_name' => 'San Matias Branch', 'location' => 'Brgy. San Matias Dingle, Ilo-ilo'],
+            ['branch_name' => 'Banate Branch', 'location' => 'Bularan St. Banate, Iloilo'],
+        ];
+
+        foreach ($branches as $branch) {
+            Branch::firstOrCreate(
+                ['branch_name' => $branch['branch_name']],
+                ['location' => $branch['location']]
+            );
+        }
     }
 }

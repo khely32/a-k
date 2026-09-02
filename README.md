@@ -56,3 +56,49 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+---
+
+## Run with Docker (recommended)
+
+This project is fully containerized for portability. You can run it on any computer with [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed. No PHP, Composer, PostgreSQL, or Node install is needed on the target machine.
+
+### Quick start
+
+```powershell
+docker compose up -d --build
+```
+
+Then open **http://localhost:8000**.
+
+On first boot the stack automatically:
+- creates the `a_k` PostgreSQL database with the `postgres`/`perez` superuser,
+- runs `php artisan migrate`,
+- seeds demo data (idempotent, skipped on restart if users already exist),
+- caches config/routes/views.
+
+### Default login
+
+- Owner: `admin@akmotorcycle.com` / `admin123`
+- Managers: `manager1@akmotorcycle.com` ... `manager4@akmotorcycle.com` / `password`
+- Cashiers: `cashier1@akmotorcycle.com` ... `cashier4@akmotorcycle.com` / `password`
+
+### Useful commands
+
+```bash
+# Stop the stack
+docker compose down
+
+# Stop AND delete the database volume (wipes data)
+docker compose down -v
+
+# Rebuild after changing code/deps
+docker compose up -d --build
+
+# View logs
+docker compose logs -f app web db
+```
+
+### Note
+
+Docker is **not** installed on the original dev machine, so these files are unverified at build time there. They follow the standard Laravel + nginx + php-fpm + Postgres pattern and should work on any machine with Docker Desktop. If anything needs adjusting after a real build, it's easy to fix.

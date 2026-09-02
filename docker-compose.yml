@@ -1,0 +1,59 @@
+services:
+  db:
+    image: postgres:16
+    container_name: ak_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: a_k
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: perez
+    volumes:
+      - ak_db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d a_k"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ak_app
+    restart: unless-stopped
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: a_k
+      DB_USERNAME: postgres
+      DB_PASSWORD: perez
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      SESSION_DRIVER: database
+    entrypoint: ["/bin/bash", "/var/www/html/docker/app/entrypoint.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./:/var/www/html
+      - ak_storage:/var/www/html/storage
+
+  web:
+    image: nginx:1.27-alpine
+    container_name: ak_web
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+      - ak_storage:/var/www/html/storage
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  ak_db_data:
+  ak_storage:

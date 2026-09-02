@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main, docker-ize]
+  pull_request:
+
+jobs:
+  lint-and-tests:
+    name: PHP lint, tests & Postgres migration check
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: a_k
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: perez
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_pgsql, pgsql, pdo_sqlite, sqlite3, zip, gd
+          coverage: none
+
+      - name: Get Composer cache path
+        id: composer-cache
+        run: echo "path=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.path }}
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Set up .env for app boot
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: PHP syntax lint
+        run: |
+          find app routes tests database -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Run test suite
+        run: php artisan test
+
+      - name: Validate migrations against PostgreSQL
+        run: |
+          php artisan migrate --force
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: a_k
+          DB_USERNAME: postgres
+          DB_PASSWORD: perez
+          SESSION_DRIVER: database
+          CACHE_STORE: database
+          QUEUE_CONNECTION: database
+
+  docker-build:
+    name: Docker image build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t ak_app:ci .
+          docker run --rm --entrypoint /bin/sh ak_app:ci -c "php -v && php -m | grep -i pdo_pgsql"

@@ -23,6 +23,12 @@ class Branch extends Model
         return $this->branch_name;
     }
 
+    public function isMainBranch(): bool
+    {
+        return str_contains(strtolower($this->branch_name ?? ''), 'moroboro')
+            || str_contains(strtolower($this->branch_name ?? ''), 'branch 1');
+    }
+
     public function getAddressAttribute()
     {
         return $this->location;

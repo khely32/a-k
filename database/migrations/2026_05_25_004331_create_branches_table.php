@@ -11,38 +11,11 @@ return new class extends Migration
     {
         Schema::create('branches', function (Blueprint $table) {
             $table->id();
-            $table->string('name');       // ✅ Branch name
-            $table->string('address');    // ✅ Branch address
+            $table->string('branch_name');
+            $table->string('location');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
-
-        // ✅ YOUR EXACT 4 BRANCHES from your capstone document
-        DB::table('branches')->insert([
-            [
-                'name'       => 'Brgy. Moroboro',
-                'address'    => 'Brgy Moroboro, Dingle, Iloilo',
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name'       => 'Poblacion Muyco St.',
-                'address'    => 'Brgy. Poblacion Muyco St., Dingle, Iloilo',
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name'       => 'Brgy. San Matias',
-                'address'    => 'Brgy. San Matias, Dingle, Iloilo',
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name'       => 'Bularan St.',
-                'address'    => 'Bularan St., Banate, Iloilo',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]
-        ]);
     }
 
     public function down(): void

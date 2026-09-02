@@ -14,7 +14,6 @@ protected $fillable = [
     'name',
     'email',
     'password',
-    'plain_password',
     'role',
     'branch',
     'branch_id',

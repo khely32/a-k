@@ -43,14 +43,12 @@ class BranchController extends Controller
     {
         $request->validate([
             'branch_name' => 'required|string|max:255',
-            'address'     => 'required|string|max:255',
-            'status'      => 'nullable|in:active,inactive'
+            'location'    => 'required|string|max:255',
         ]);
 
         Branch::create([
             'branch_name' => $request->branch_name,
-            'address'     => $request->address,
-            'status'      => $request->status ?? 'active'
+            'location'    => $request->location,
         ]);
 
         return redirect()->route('branches.index')->with('success', '✅ Branch created successfully.');
@@ -71,14 +69,12 @@ class BranchController extends Controller
     {
         $request->validate([
             'branch_name' => 'required|string|max:255',
-            'address'     => 'required|string|max:255',
-            'status'      => 'nullable|in:active,inactive'
+            'location'    => 'required|string|max:255',
         ]);
 
         $branch->update([
             'branch_name' => $request->branch_name,
-            'address'     => $request->address,
-            'status'      => $request->status ?? 'active'
+            'location'    => $request->location,
         ]);
 
         return redirect()->route('branches.index')->with('success', '✅ Branch updated successfully.');

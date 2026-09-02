@@ -72,17 +72,18 @@ class LoginController extends Controller
             'security_contact' => 'required|string|max:255',
         ]);
 
-        $branchName = $request->role === 'owner'
-            ? 'Moroboro Branch'
-            : $request->branch;
+        if ($request->role === 'owner') {
+            return back()->withErrors(['role' => 'Owner accounts can only be created by an existing owner or admin.']);
+        }
+
+        $branchName = $request->branch;
         $branchObj = \App\Models\Branch::where('branch_name', $branchName)->first();
 
         User::create([
             'name'             => $request->name,
             'email'            => $request->email,
             'password'         => $request->password,
-            'plain_password'   => $request->password,
-            'role'             => $request->role,
+            'role'             => 'staff',
             'branch'           => $branchName,
             'branch_id'        => $branchObj ? $branchObj->id : null,
             'security_contact' => $request->security_contact,

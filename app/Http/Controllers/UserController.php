@@ -65,7 +65,6 @@ class UserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'plain_password' => $request->password,
             'role' => $request->role,
             'branch_id' => $branchId,
             'branch' => $branchName,
@@ -123,7 +122,6 @@ class UserController extends Controller
         if ($request->filled('password')) {
             $request->validate(['password' => 'string|min:8']);
             $data['password'] = Hash::make($request->password);
-            $data['plain_password'] = $request->password;
         }
 
         $user->update($data);
@@ -144,16 +142,13 @@ class UserController extends Controller
     public function revealPassword(Request $request, User $user)
     {
         $authUser = auth()->user();
-        if (!in_array($authUser->role, ['owner', 'admin'])) {
+        if ($authUser->role !== 'owner') {
             abort(403);
         }
 
-        $plain = $user->plain_password;
-        if ($plain) {
-            return response()->json(['password' => $plain]);
-        }
-
-        return response()->json(['password' => '(no password stored)']);
+        return response()->json([
+            'password' => '(Passwords are stored encrypted and cannot be revealed for security reasons.)',
+        ]);
     }
 
     public function resetPassword(Request $request, User $user)
@@ -169,7 +164,6 @@ class UserController extends Controller
 
         $user->update([
             'password' => Hash::make($request->new_password),
-            'plain_password' => $request->new_password,
         ]);
 
         return response()->json(['success' => true, 'message' => 'Password updated successfully.']);
