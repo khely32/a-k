@@ -1,0 +1,50 @@
+databases:
+  - name: ak-db
+    databaseName: a_k
+    user: postgres
+    plan: free  # upgrade to "starter" for production/backups
+
+services:
+  - type: web
+    name: ak-web
+    runtime: docker
+    repo: https://github.com/khely32/a-k
+    plan: free  # web services spin down after 15 min on free; upgrade to "starter" for always-on
+    dockerfilePath: ./Dockerfile.render
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: false # set manually in dashboard; use `php artisan key:generate --show`
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: ak-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: ak-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: ak-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: ak-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: ak-db
+          property: password
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: SESSION_DRIVER
+        value: database
+      - key: MIGRATE_AND_SEED
+        value: "true"
