@@ -1,0 +1,31 @@
+name,brand,type,quantity,price,serial_number
+6001 Wheel Bearing (Front),NTN,Bearings,20,90.00,AK-6001
+6201 Rear Wheel Bearing,Koyo,Bearings,35,110.00,AK-6201
+6202 Hub Bearing (Mio/Click),NSK,Bearings,30,115.00,AK-6202
+6301 Transmission Bearing (TMX),Koyo,Bearings,15,135.00,AK-6301
+6302 Crankshaft Bearing,NTN,Bearings,10,280.00,AK-6302
+30203 Steering Cone Bearing,Koyo,Bearings,12,185.00,AK-30203
+32004 Steering Bearing (KLX),NSK,Bearings,8,210.00,AK-32004
+32205 Wheel Hub Bearing,NTN,Bearings,6,245.00,AK-32205
+11749 Outer Hub Bearing,Koyo,Bearings,10,160.00,AK-11749
+14131-276 Engine Oil Seal,Honda,Oil Seals,25,75.00,AK-14131
+607 Starter Motor Bearing,NSK,Bearings,40,45.00,AK-607
+608 Speedometer Gear Bearing,NSK,Bearings,50,45.00,AK-608
+XR200 Carburetor Assembly,Keihin,Carburetor,5,2450.00,AK-XR200-CARB
+FU150 Clutch Cable (Raider),Suzuki,Cables,15,220.00,AK-FU150-CC
+TMX155 Ignition Coil,Honda,Electrical,8,450.00,AK-TMX155-IC
+TF28KW02 Hub Ring,Yamaha,Hub Parts,12,130.00,AK-TF28KW
+62822 Rear Axle Seal,Koyo,Oil Seals,18,85.00,AK-62822
+Mio 125 Belt,Gates,Drive Belts,10,650.00,AK-MIO125-BLT
+Click 125 Flyball Set,Honda,Transmission,15,350.00,AK-CLK125-FB
+Smash 115 Brake Shoe,Suzuki,Brakes,20,120.00,AK-SMSH115-BS
+TMX 125 Front Sprocket,RK Takasago,Sprockets,12,180.00,AK-TMX125-FS
+Mio Sporty Air Filter,Yamaha,Filters,15,250.00,AK-MIOSPTY-AF
+RS100 Crankcase Gasket,Yamaha,Gaskets,25,95.00,AK-RS100-CG
+XR200 Front Brake Pad,Bendix,Brakes,10,280.00,AK-XR200-FBP
+45449-10 Hub Collar,Yamaha,Hub Parts,8,150.00,AK-45449
+67048-10 ISO Hub Ring,Honda,Hub Parts,10,180.00,AK-67048
+68149-10 Front Wheel Seal,Koyo,Oil Seals,20,80.00,AK-68149
+69348-10 Gearbox Seal,Koyo,Oil Seals,15,85.00,AK-69348
+24780/20 Axle Collar,Suzuki,Hub Parts,12,140.00,AK-24780
+501349-10 Cushion Rubber,Yamaha,Cushions,24,120.00,AK-501349

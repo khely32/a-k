@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A&K Parts — Dashboard Metrics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══ RESET & BASE ═══ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #1A1A1A;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ═══ METRICS ROW ═══ */
+.metrics-row {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+/* ═══ CARD ═══ */
+.metric-card {
+    flex: 1;
+    background: #2C2C2C;
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+
+/* Top accent line */
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 12px 12px 0 0;
+}
+
+/* ═══ CARD LAYOUT ═══ */
+.card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+.card-text { flex: 1; min-width: 0; }
+
+.card-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #9CA3AF;
+    margin-bottom: 10px;
+}
+.card-value {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #FFFFFF;
+    line-height: 1;
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+}
+.card-subtitle {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #6B7280;
+}
+
+/* ═══ ICON AREA ═══ */
+.icon-area {
+    width: 70px;
+    height: 70px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--accent);
+    position: relative;
+}
+
+/* Neon glow — multi-layer box-shadow */
+.icon-area::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    box-shadow:
+        0 0 10px var(--accent),
+        0 0 20px var(--accent),
+        0 0 40px var(--accent),
+        0 0 60px var(--accent);
+    animation: pulseGlow 2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* Ambient light diffusion behind card */
+.icon-area::after {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-alpha), transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.icon-area svg {
+    width: 32px;
+    height: 32px;
+    stroke: #FFFFFF;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    position: relative;
+    z-index: 1;
+}
+
+/* ═══ PULSE ANIMATION ═══ */
+@keyframes pulseGlow {
+    0%, 100% {
+        opacity: .6;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+}
+
+/* ═══ ACCENT VARIANTS ═══ */
+.metric-card.crimson {
+    --accent: #DC143C;
+    --accent-alpha: rgba(220, 20, 60, 0.15);
+}
+.metric-card.green {
+    --accent: #00E676;
+    --accent-alpha: rgba(0, 230, 118, 0.15);
+}
+.metric-card.amber {
+    --accent: #FFC107;
+    --accent-alpha: rgba(255, 193, 7, 0.15);
+}
+.metric-card.cyan {
+    --accent: #00E5FF;
+    --accent-alpha: rgba(0, 229, 255, 0.15);
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 900px) {
+    .metrics-row { flex-wrap: wrap; }
+    .metric-card { min-width: calc(50% - 12px); }
+}
+@media (max-width: 540px) {
+    .metric-card { min-width: 100%; }
+    .card-value { font-size: 1.8rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="metrics-row">
+
+    <!-- Card 1: TOTAL PRODUCTS — Crimson -->
+    <div class="metric-card crimson">
+        <div class="card-content">
+            <div class="card-text">
+                <div class="card-title">Total Products</div>
+                <div class="card-value">0</div>
+                <div class="card-subtitle">Active items in inventory</div>
+            </div>
+            <div class="icon-area">
+                <svg viewBox="0 0 24 24">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: TOTAL INVENTORY — Green -->
+    <div class="metric-card green">
+        <div class="card-content">
+            <div class="card-text">
+                <div class="card-title">Total Inventory</div>
+                <div class="card-value">167</div>
+                <div class="card-subtitle">Units across all categories</div>
+            </div>
+            <div class="icon-area">
+                <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="20" x2="18" y2="10"/>
+                    <line x1="12" y1="20" x2="12" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="14"/>
+                    <polyline points="15 8 21 4 21 8"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3: LOW STOCK ITEMS — Amber -->
+    <div class="metric-card amber">
+        <div class="card-content">
+            <div class="card-text">
+                <div class="card-title">Low Stock Items</div>
+                <div class="card-value">19</div>
+                <div class="card-subtitle">Requires attention</div>
+            </div>
+            <div class="icon-area">
+                <svg viewBox="0 0 24 24">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 4: PENDING TRANSFERS — Cyan -->
+    <div class="metric-card cyan">
+        <div class="card-content">
+            <div class="card-text">
+                <div class="card-title">Pending Transfers</div>
+                <div class="card-value">0</div>
+                <div class="card-subtitle">Awaiting approval</div>
+            </div>
+            <div class="icon-area">
+                <svg viewBox="0 0 24 24">
+                    <line x1="5" y1="9" x2="19" y2="9"/>
+                    <polyline points="15 5 19 9 15 13"/>
+                    <line x1="19" y1="15" x2="5" y2="15"/>
+                    <polyline points="9 11 5 15 9 19"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
