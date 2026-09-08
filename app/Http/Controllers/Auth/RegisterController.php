@@ -16,10 +16,6 @@ class RegisterController extends Controller
 
     public function store(Request $request)
     {
-        if (User::count() >= 4) {
-            return back()->withErrors(['error' => 'Registration is closed. Maximum user limit (4) reached.']);
-        }
-
         $request->validate([
             'name' => 'required|max:255',
             'email' => 'required|email|unique:users,email',

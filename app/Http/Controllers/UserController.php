@@ -39,10 +39,6 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        if (User::count() >= 4) {
-            return back()->withErrors(['error' => 'Registration is closed. Maximum user limit (4) reached.']);
-        }
-
         $user = auth()->user();
         $allowedRoles = in_array($user->role, ['admin', 'owner']) ? 'owner,staff,admin,manager,cashier' : 'staff,manager,cashier';
         

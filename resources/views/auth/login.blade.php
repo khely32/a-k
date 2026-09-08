@@ -154,8 +154,8 @@
                 @csrf
 
                 <div class="fg">
-                    <label>Email Address</label>
-                    <input type="email" name="email" id="email" value="{{ old('email') }}" placeholder="you@example.com" required autofocus>
+                    <label>Username / Email</label>
+                    <input type="text" name="email" id="email" value="{{ old('email') }}" placeholder="admin or you@example.com" required autofocus>
                     <i class="bi bi-envelope fi"></i>
                 </div>
 

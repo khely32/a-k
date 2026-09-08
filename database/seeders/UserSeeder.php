@@ -17,41 +17,31 @@ class UserSeeder extends Seeder
     {
         $mainBranch = \App\Models\Branch::whereRaw('LOWER(branch_name) LIKE ?', ['%moroboro%'])->first();
 
-        // Owner
+        // Admin (full control)
         User::firstOrCreate(
-            ['email' => 'admin@akmotorcycle.com'],
+            ['email' => 'admin'],
             [
                 'name' => 'Owner Admin',
-                'password' => Hash::make('admin123'),
+                'password' => Hash::make('admin123456789'),
                 'role' => 'owner',
                 'branch_id' => $mainBranch ? $mainBranch->id : null,
             ]
         );
 
-        // Branch Managers/Cashiers for testing
+        // One staff user per branch
         $branches = \App\Models\Branch::orderBy('id')->get();
-        $i = 1;
         foreach ($branches as $branch) {
+            $userName = $branch->branch_name . ' staff';
+            $slug = strtolower(str_replace(' ', '', preg_replace('/\s+Branch$/i', '', $branch->branch_name)));
             User::firstOrCreate(
-                ['email' => "manager$i@akmotorcycle.com"],
+                ['email' => "{$slug}@akmotorcycle.com"],
                 [
-                    'name' => "Manager Branch $i",
+                    'name' => $userName,
                     'password' => Hash::make('password'),
-                    'role' => 'manager',
+                    'role' => 'staff',
                     'branch_id' => $branch->id,
                 ]
             );
-
-            User::firstOrCreate(
-                ['email' => "cashier$i@akmotorcycle.com"],
-                [
-                    'name' => "Cashier Branch $i",
-                    'password' => Hash::make('password'),
-                    'role' => 'cashier',
-                    'branch_id' => $branch->id,
-                ]
-            );
-            $i++;
         }
     }
 }
