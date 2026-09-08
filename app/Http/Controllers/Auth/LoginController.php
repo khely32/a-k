@@ -18,7 +18,7 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email'    => 'required|email',
+            'email'    => 'required|string',
             'password' => 'required|string',
         ]);
 
@@ -59,10 +59,6 @@ class LoginController extends Controller
 
     public function register(Request $request)
     {
-        if (User::count() >= 4) {
-            return back()->withErrors(['error' => 'Registration is closed. Maximum user limit (4) reached.']);
-        }
-
         $request->validate([
             'name'             => 'required|string|max:255',
             'email'            => 'required|email|unique:users,email',
