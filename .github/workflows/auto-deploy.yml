@@ -1,0 +1,30 @@
+name: Auto-deploy to main
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [render-deploy]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  merge-to-main:
+    name: Fast-forward render-deploy into main
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: render-deploy
+          fetch-depth: 0
+
+      - name: Merge render-deploy into main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          # Fast-forward main to render-deploy (non-fast-forward pushes are rejected)
+          git push origin render-deploy:main
+          echo "main updated to $(git rev-parse --short render-deploy)"
