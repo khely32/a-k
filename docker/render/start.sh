@@ -26,16 +26,30 @@ php-fpm -D
 # background and keeps retrying until the database is reachable.
 (
     echo "Waiting for database..."
-    until php artisan db:show >/dev/null 2>&1; do
-        sleep 2
+    DB_READY=0
+    ATTEMPT=0
+    while [ "$DB_READY" -ne 1 ]; do
+        ATTEMPT=$((ATTEMPT+1))
+        if OUTPUT=$(php artisan db:show 2>&1); then
+            DB_READY=1
+            echo "Database ready."
+        else
+            ERR=$(echo "$OUTPUT" | tail -n 1)
+            echo "[db wait] attempt $ATTEMPT failed: $ERR"
+            sleep 2
+        fi
     done
-    echo "Database ready."
 
-    while ! php artisan migrate --force; do
-        echo "Migration failed - retrying in 10s..."
-        sleep 10
+    while true; do
+        if MIG=$(php artisan migrate --force 2>&1); then
+            echo "Migrations applied."
+            break
+        else
+            ERR=$(echo "$MIG" | tail -n 1)
+            echo "[migrate] failed - retrying in 10s: $ERR"
+            sleep 10
+        fi
     done
-    echo "Migrations applied."
 
     # Seed only when there are no users (MIGRATE_AND_SEED=true enables it).
     if [ "${MIGRATE_AND_SEED:-false}" = "true" ]; then
