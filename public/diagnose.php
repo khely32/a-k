@@ -50,4 +50,38 @@ diag('auth attempt', function () {
     return $ok ? 'authenticated' : 'AUTH FAILED';
 });
 
+$logFile = storage_path('logs/laravel.log');
+echo "<h3>POST /login via HTTP kernel (real CSRF)</h3><pre>";
+try {
+    $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+    session_start();
+
+    // GET to seed CSRF token into session
+    $get = Illuminate\Http\Request::create('http://localhost/login', 'GET');
+    $kernel->handle($get);
+
+    $token = csrf_token();
+    $post = Illuminate\Http\Request::create('http://localhost/login', 'POST', [
+        '_token' => $token, 'email' => 'admin', 'password' => 'admin123456789',
+    ]);
+    $post->setSession(app('session.store'));
+    $res = $kernel->handle($post);
+    echo 'STATUS: ' . $res->getStatusCode() . "\n";
+    if ($res->getStatusCode() === 302) {
+        echo 'LOCATION: ' . $res->headers->get('Location') . "\n";
+    }
+} catch (Throwable $e) {
+    echo 'EXCEPTION: ' . get_class($e) . "\n" . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n";
+}
+echo '</pre>';
+
+echo "<h3>laravel.log (last 120 lines)</h3><pre>";
+if (file_exists($logFile)) {
+    $lines = array_slice(file($logFile), -120);
+    echo e(implode('', $lines));
+} else {
+    echo 'no log file';
+}
+echo '</pre>';
+
 echo "<br>done<br>";
