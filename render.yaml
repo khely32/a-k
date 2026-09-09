@@ -14,7 +14,7 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: "true"
+        value: "false"
       - key: APP_KEY
         sync: false # set manually in dashboard; use `php artisan key:generate --show`
       - key: DB_CONNECTION

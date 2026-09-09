@@ -3,9 +3,17 @@ set -e
 
 cd /var/www/html
 
-# Generate an APP_KEY if one is not provided via env.
-if [ -z "$APP_KEY" ]; then
-    echo "APP_KEY not set - generating..."
+# Generate an APP_KEY if one is not provided OR is invalid (must be a
+# base64-encoded 32-byte key for AES-256-CBC). A wrong-length raw string set in
+# Render's dashboard otherwise makes every request fail with "Unsupported cipher
+# or incorrect key length".
+APP_KEY_OK=$(php -r 'if (isset($_SERVER["APP_KEY"]) && str_starts_with($_SERVER["APP_KEY"], "base64:")) { $d = base64_decode(substr($_SERVER["APP_KEY"], 7), true); echo ($d !== false && strlen($d) === 32) ? "yes" : "no"; } else { echo "no"; }')
+if [ "$APP_KEY_OK" != "yes" ]; then
+    if [ -z "$APP_KEY" ]; then
+        echo "APP_KEY not set - generating..."
+    else
+        echo "APP_KEY is invalid (wrong format/length) - generating a new one..."
+    fi
     APP_KEY="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
     echo "APP_KEY=$APP_KEY" >> .env
 fi
