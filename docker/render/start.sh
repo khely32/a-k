@@ -26,16 +26,17 @@ php-fpm -D
 # background and keeps retrying until the database is reachable.
 (
     echo "Waiting for database..."
+    echo "[db] DB_HOST=$DB_HOST DB_PORT=$DB_PORT DB_DATABASE=$DB_DATABASE DB_USERNAME=$DB_USERNAME DB_PASSWORD_len=${#DB_PASSWORD}"
     DB_READY=0
     ATTEMPT=0
     while [ "$DB_READY" -ne 1 ]; do
         ATTEMPT=$((ATTEMPT+1))
-        if OUTPUT=$(php artisan db:show 2>&1); then
+        DBOUT=$(php -r 'try { new PDO("pgsql:host=".getenv("DB_HOST").";port=".getenv("DB_PORT").";dbname=".getenv("DB_DATABASE"), getenv("DB_USERNAME"), getenv("DB_PASSWORD")); echo "PDO OK\n"; } catch (Throwable $e) { echo "PDO ERROR: ".$e->getMessage()."\n"; }' 2>&1)
+        if echo "$DBOUT" | grep -q "PDO OK"; then
             DB_READY=1
             echo "Database ready."
         else
-            ERR=$(echo "$OUTPUT" | tail -n 1)
-            echo "[db wait] attempt $ATTEMPT failed: $ERR"
+            echo "[db wait] attempt $ATTEMPT: $DBOUT"
             sleep 2
         fi
     done
