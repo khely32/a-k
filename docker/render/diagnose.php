@@ -8,8 +8,8 @@ putenv('APP_DEBUG=true');
 $_ENV['APP_ENV'] = 'local';
 putenv('APP_ENV=local');
 
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+require __DIR__ . '/../../vendor/autoload.php';
+$app = require_once __DIR__ . '/../../bootstrap/app.php';
 
 $kernel = $app->make(HttpKernel::class);
 
