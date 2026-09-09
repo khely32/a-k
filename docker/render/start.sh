@@ -60,14 +60,17 @@ php-fpm -D
         fi
     done
 
-    # Seed only when there are no users (MIGRATE_AND_SEED=true enables it).
+    # Seed when the new 'admin' account does not exist yet. If the DB only has
+    # legacy users (from the old seeder), remove them first (sales.user_id is
+    # FK-set-null, so this is safe) and seed the current user scheme.
     if [ "${MIGRATE_AND_SEED:-false}" = "true" ]; then
-        USERS=$(php artisan tinker --execute="echo App\\Models\\User::count();" 2>/dev/null || echo "0")
-        if [ -z "$USERS" ] || [ "$USERS" = "0" ]; then
-            echo "Seeding database..."
+        ADMIN_COUNT=$(php artisan tinker --execute="echo App\\Models\\User::where('email', 'admin')->count();" 2>/dev/null || echo "0")
+        if [ -z "$ADMIN_COUNT" ] || [ "$ADMIN_COUNT" = "0" ]; then
+            echo "Admin account missing - clearing users and reseeding..."
+            php artisan tinker --execute="App\\Models\\User::query()->delete();" 2>/dev/null || true
             php artisan db:seed --force
         else
-            echo "Database already seeded ($USERS users) - skipping seed."
+            echo "Users already seeded (admin exists) - skipping seed."
         fi
     fi
 
