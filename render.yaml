@@ -17,7 +17,7 @@ services:
       - key: DB_SSLMODE
         value: require # Neon requires TLS connections
       - key: DB_HOST
-        sync: false # Neon host, e.g. ep-xxxx.region.aws.neon.tech
+        sync: false # Neon DIRECT host (no "-pooler" suffix), e.g. ep-xxxx.region.aws.neon.tech - pooler breaks migration transactions
       - key: DB_PORT
         value: "5432"
       - key: DB_DATABASE
