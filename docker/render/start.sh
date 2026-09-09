@@ -66,6 +66,9 @@ php-fpm -D
     # Clear/cache config (cached config references env vars, so run after env is set).
     php artisan config:clear >/dev/null 2>&1 || true
 
+    # Temporary diagnostics: boot Laravel and exercise /login to surface the real 500.
+    php docker/render/diagnose.php 2>&1 || true
+
     echo "Startup complete."
 )&
 
