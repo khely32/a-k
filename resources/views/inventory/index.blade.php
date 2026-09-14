@@ -105,11 +105,17 @@
         background: #0F172A;
         border: 1px solid #1E293B;
         border-radius: 18px;
-        overflow: hidden;
+        overflow-x: auto;
+        overflow-y: hidden;
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
     }
+    .inv-card::-webkit-scrollbar{height:8px;}
+    .inv-card::-webkit-scrollbar-track{background:rgba(15,23,42,.6);border-radius:0 0 18px 18px;}
+    .inv-card::-webkit-scrollbar-thumb{background:#334155;border-radius:8px;border:2px solid #0F172A;}
+    .inv-card::-webkit-scrollbar-thumb:hover{background:#475569;}
     .inv-card .table {
         margin-bottom: 0;
+        min-width: 720px;
         --bs-table-bg: transparent;
         --bs-table-hover-bg: transparent;
     }
@@ -120,7 +126,7 @@
         font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        padding: 14px 18px;
+        padding: 12px 16px;
         border-bottom: 1px solid rgba(0, 230, 118, 0.15);
         white-space: nowrap;
     }
@@ -132,11 +138,12 @@
         transition: background 0.15s ease;
     }
     .inv-card tbody td {
-        padding: 12px 18px;
+        padding: 10px 16px;
         border-bottom: 1px solid rgba(30, 41, 59, 0.6);
         color: #F1F5F9;
         font-size: 0.82rem;
         vertical-align: middle;
+        white-space: nowrap;
         transition: background 0.15s ease;
     }
     .inv-card tbody tr:last-child td { border-bottom: none; }

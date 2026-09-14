@@ -109,9 +109,6 @@ body{
     width:calc(100% - 240px);
     min-height:100vh;
     overflow-x:hidden;
-    display:flex;
-    flex-direction:column;
-    align-items:stretch;
 }
 
 .table{color:var(--text)}
