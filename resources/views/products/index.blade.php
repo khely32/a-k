@@ -255,16 +255,19 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
                             </span>
                         </td>
                         <td class="text-center pe-4">
-                            @if($isMainBranch)
                             <div class="btn-group btn-group-sm">
-                                <a href="{{ route('products.edit', $product->id) }}" class="btn act-dark" style="border-radius:6px;padding:5px 10px;text-decoration:none;" title="Edit">
+                                <button type="button" class="btn act-dark" style="border-radius:6px;padding:5px 10px;" data-bs-toggle="modal" data-bs-target="#restockModal" data-id="{{ $product->id }}" data-name="{{ $product->name }}" title="Add Stock">
+                                    <i class="bi bi-plus-circle-fill" style="color:var(--cyan);"></i>
+                                </button>
+                                @if($isMainBranch)
+                                <a href="{{ route('products.edit', $product->id) }}" class="btn act-dark ms-1" style="border-radius:6px;padding:5px 10px;text-decoration:none;" title="Edit">
                                     <i class="bi bi-pencil-fill"></i>
                                 </a>
                                 <button type="button" class="btn act-dark ms-1" style="border-radius:6px;padding:5px 10px;" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="{{ $product->id }}" data-name="{{ $product->name }}" title="Delete">
                                     <i class="bi bi-trash-fill"></i>
                                 </button>
+                                @endif
                             </div>
-                            @endif
                         </td>
                     </tr>
                     @empty
@@ -385,6 +388,40 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
 </div>
 @endif
 
+<!-- ================= RESTOCK MODAL ================= -->
+<div class="modal fade" id="restockModal" tabindex="-1" aria-labelledby="restockModalLabel" aria-hidden="true" style="backdrop-filter: blur(10px);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 text-white" style="background:var(--card);border:1px solid rgba(0,229,255,0.2);border-radius:20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" style="color:var(--cyan);"><i class="bi bi-plus-circle-fill me-2"></i> Add Stock</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p class="small mb-3" style="color:#9CA3AF;">
+                    Adding stock to <strong id="restockBranchName" style="color:var(--cyan);">{{ auth()->user()->branch->branch_name ?? 'your branch' }}</strong> for
+                    <strong id="restockProductName" style="color:#fbbf24;">this product</strong>.
+                </p>
+                <form id="restockForm" method="POST" action="{{ route('products.restock') }}">
+                    @csrf
+                    <input type="hidden" name="product_id" id="restockProductId">
+                    <div class="mb-3">
+                        <label for="restockQuantity" class="form-label small" style="color:#9CA3AF;">Quantity to add</label>
+                        <input type="number" name="quantity" id="restockQuantity" min="1" value="1" required
+                            class="form-control bg-dark text-white border-secondary"
+                            style="border-radius:10px;background:#0B1120;color:#E2E8F0;border:1px solid #334155;">
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn" data-bs-dismiss="modal" style="border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:var(--text);">Cancel</button>
+                        <button type="submit" class="btn px-4" style="border-radius:10px;background:var(--cyan);color:#0B1117;font-weight:700;">
+                            <i class="bi bi-plus-lg me-1"></i> Add Stock
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Client-Side Search and Filter Logic, Drag-and-Drop, CSV Parsing Preview -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -448,6 +485,22 @@ document.addEventListener('DOMContentLoaded', function() {
             
             deleteProductName.textContent = productName;
             deleteForm.action = `/products/${productId}`;
+        });
+    }
+
+    // ----------------------------------------------------
+    // Restock Modal Handler
+    // ----------------------------------------------------
+    const restockModal = document.getElementById('restockModal');
+    if (restockModal) {
+        restockModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const productId = button.getAttribute('data-id');
+            const productName = button.getAttribute('data-name');
+
+            document.getElementById('restockProductId').value = productId;
+            document.getElementById('restockProductName').textContent = productName;
+            document.getElementById('restockQuantity').value = 1;
         });
     }
 

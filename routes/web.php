@@ -167,6 +167,7 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
+    Route::post('/products/restock', [ProductController::class, 'restock'])->name('products.restock');
     Route::resource('products', ProductController::class);
     Route::get('/category-sizes/{category}', [ProductController::class, 'getSizes'])->name('category.sizes');
 

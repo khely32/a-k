@@ -157,7 +157,36 @@ class ProductController extends Controller
             ]
         );
 
-        return redirect()->route('products.index')->with('success', 'Product updated successfully.');
+        $redirect = $request->input('from') === 'inventory'
+            ? route('inventory.index')
+            : route('products.index');
+
+        return redirect($redirect)->with('success', 'Product updated successfully.');
+    }
+
+    /**
+     * Add stock for the current branch (increments existing quantity by the given amount).
+     */
+    public function restock(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity'   => 'required|integer|min:1',
+        ]);
+
+        $branchId = auth()->user()->branch_id ?? 1;
+
+        Inventory::updateOrCreate(
+            [
+                'product_id' => $request->product_id,
+                'branch_id'  => $branchId,
+            ],
+            [
+                'quantity' => \Illuminate\Support\Facades\DB::raw('COALESCE(quantity, 0) + ' . (int) $request->quantity),
+            ]
+        );
+
+        return redirect()->route('products.index')->with('success', 'Stock added successfully.');
     }
 
     /**

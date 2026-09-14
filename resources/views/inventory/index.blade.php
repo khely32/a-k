@@ -410,7 +410,7 @@
                                 )">
                                 <i class="bi bi-eye"></i>
                             </button>
-                            <a href="{{ route('products.edit', $product) }}" class="act-btn act-edit" data-bs-toggle="tooltip" title="Edit">
+                            <a href="{{ route('products.edit', ['product' => $product, 'from' => 'inventory']) }}" class="act-btn act-edit" data-bs-toggle="tooltip" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <form class="act-del-form" action="{{ route('products.destroy', $product) }}" method="POST" onsubmit="return confirm('Delete this product from inventory?');">

@@ -57,8 +57,8 @@
             </h1>
             <p class="mb-0" style="color:#64748b;font-size:.78rem;">Update item attributes, pricing, and stock configuration.</p>
         </div>
-        <a href="{{ route('products.index') }}" class="ep-btn-cancel">
-            <i class="bi bi-arrow-left"></i> Back to Products
+        <a href="{{ request('from') === 'inventory' ? route('inventory.index') : route('products.index') }}" class="ep-btn-cancel">
+            <i class="bi bi-arrow-left"></i> @if(request('from') === 'inventory')Back to Inventory@elseBack to Products@endif
         </a>
     </div>
 
@@ -84,6 +84,9 @@
         <form action="{{ route('products.update', $product) }}" method="POST">
             @csrf
             @method('PUT')
+            @if(request('from') === 'inventory')
+            <input type="hidden" name="from" value="inventory">
+            @endif
 
             {{-- SECTION: Basic Information --}}
             <div class="d-flex align-items-center gap-2 mb-4">
@@ -206,7 +209,7 @@
 
             {{-- ACTION BUTTONS --}}
             <div class="d-flex align-items-center justify-content-end gap-3 pt-4" style="border-top:1px solid rgba(255,255,255,.05);">
-                <a href="{{ route('products.index') }}" class="ep-btn-cancel">
+                <a href="{{ request('from') === 'inventory' ? route('inventory.index') : route('products.index') }}" class="ep-btn-cancel">
                     <i class="bi bi-x-lg"></i> Cancel
                 </a>
                 <button type="submit" class="ep-btn-save">
