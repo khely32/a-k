@@ -30,6 +30,21 @@ class Product extends Model
                 $product->serial_number = $serial;
             }
         });
+
+        // Master-catalog hook (mirrors the SQL TRIGGER request):
+        // as soon as a product exists, give EVERY active branch a tracked
+        // inventory row so the branch view shows the item (default qty 0,
+        // i.e. OUT OF STOCK) instead of silently missing the row/joining null.
+        static::created(function ($product) {
+            $branches = Branch::where('is_active', true)->get();
+
+            foreach ($branches as $branch) {
+                Inventory::updateOrCreate(
+                    ['product_id' => $product->id, 'branch_id' => $branch->id],
+                    ['quantity' => 0]
+                );
+            }
+        });
     }
 
     /**

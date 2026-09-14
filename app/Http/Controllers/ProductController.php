@@ -93,11 +93,10 @@ class ProductController extends Controller
             'branch_id'   => $branchId,
         ]);
 
-        Inventory::create([
-            'product_id' => $product->id,
-            'branch_id'  => $branchId,
-            'quantity'   => $request->quantity,
-        ]);
+        Inventory::updateOrCreate(
+            ['product_id' => $product->id, 'branch_id' => $branchId],
+            ['quantity'   => $request->quantity]
+        );
 
         return redirect()->route('products.index')->with('success', 'Product created successfully.');
     }
@@ -331,11 +330,10 @@ class ProductController extends Controller
                 $newProduct->branch_id = $branchId;
                 $newProduct->save();
 
-                Inventory::create([
-                    'product_id' => $newProduct->id,
-                    'branch_id'  => $branchId,
-                    'quantity'   => $quantity,
-                ]);
+                Inventory::updateOrCreate(
+                    ['product_id' => $newProduct->id, 'branch_id' => $branchId],
+                    ['quantity' => $quantity]
+                );
 
                 $insertedCount++;
             }

@@ -62,11 +62,10 @@ class InventoryController extends Controller
                 'branch_id'   => $branchId,
             ]);
 
-            Inventory::create([
-                'branch_id'  => $branchId,
-                'product_id' => $product->id,
-                'quantity'   => $validated['quantity'],
-            ]);
+            Inventory::updateOrCreate(
+                ['product_id' => $product->id, 'branch_id' => $branchId],
+                ['quantity' => $validated['quantity']]
+            );
 
             DB::commit();
 

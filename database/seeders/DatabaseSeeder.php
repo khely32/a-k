@@ -20,6 +20,10 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             CategorySizeSeeder::class,
             ProductSeeder::class,
+            SprayPaintProductsSeeder::class,
+            KoyoBearingProductsSeeder::class,
+            LubricantAccessoryProductsSeeder::class,
+            InventoryBackfillSeeder::class,
         ]);
     }
 }
