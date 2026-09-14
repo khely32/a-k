@@ -2,8 +2,8 @@
 
 @section('content')
 <style>
-    .inv-add-wrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 40px);padding:32px 0;}
-    .inv-add-card{width:100%;max-width:760px;margin:0 auto;background:#131B26;border:1px solid #1E293B;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.02);}
+    .inv-add-wrap{width:100%;padding:0;}
+    .inv-add-card{width:100%;max-width:1100px;margin:0 auto;background:#131B26;border:1px solid #1E293B;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.02);}
     .inv-add-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:20px 28px;border-bottom:1px solid #1E293B;}
     .inv-add-title{color:#fff;font-size:1.4rem;font-weight:700;margin:0;}
     .inv-add-icon{color:#10B981;font-size:1.3rem;}
@@ -80,14 +80,14 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="inv-add-label">Stock Quantity Level <span style="color:#EF4444;">*</span></label>
                         <input type="number" name="quantity" class="form-control @error('quantity') is-invalid @enderror"
                                value="{{ old('quantity', 0) }}" min="0" placeholder="Estimated initial stock" required>
                         @error('quantity')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="inv-add-label">Price (₱) <span style="color:#EF4444;">*</span></label>
                         <input type="number" step="0.01" name="price" class="form-control @error('price') is-invalid @enderror"
                                value="{{ old('price') }}" placeholder="Estimated retail price" required>
