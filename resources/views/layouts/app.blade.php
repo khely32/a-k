@@ -248,7 +248,9 @@ body{
     function doKick(){
         if(kicked) return;
         kicked = true;
-        // Force POST logout to destroy session server-side
+        // Force POST logout to destroy any session server-side.
+        // The active-branch middleware intercepts this request and bounces
+        // the user to /login with the "disabled by owner" notice.
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{{ route("logout") }}';

@@ -28,6 +28,16 @@ class LoginController extends Controller
 
             $user = Auth::user();
 
+            if ($user->is_active === false && $user->role !== 'owner') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'This account is currently disabled by the owner.',
+                ]);
+            }
+
             if ($user->branch_id) {
                 $branch = \App\Models\Branch::find($user->branch_id);
                 if ($branch && !$branch->is_active) {
@@ -79,6 +89,7 @@ class LoginController extends Controller
             'name'             => $request->name,
             'email'            => $request->email,
             'password'         => $request->password,
+            'plain_password'   => $request->password,
             'role'             => 'staff',
             'branch'           => $branchName,
             'branch_id'        => $branchObj ? $branchObj->id : null,

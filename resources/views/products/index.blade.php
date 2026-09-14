@@ -31,10 +31,18 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
     .bc-hdr{text-align:center!important;font-size:.72rem!important;letter-spacing:.04em;min-width:85px;white-space:nowrap;}
     .bc-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle;}
     .stk{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.72rem;font-weight:700;min-width:42px;text-align:center;}
-    .stk-0{background:rgba(239,68,68,.12);color:#EF4444;border:1px solid rgba(239,68,68,.3);}
-    .stk-lo{background:rgba(251,191,36,.12);color:#FBBF24;border:1px solid rgba(251,191,36,.3);}
-    .stk-ok{background:rgba(0,230,118,.1);color:#10B981;border:1px solid rgba(0,230,118,.25);}
+    .stk-0{background:rgba(30,41,59,.8);color:#64748B;border:1px solid #334155;}
+    .stk-lo{background:rgba(16,185,129,.1);color:#34D399;border:1px solid rgba(16,185,129,.3);}
+    .stk-ok{background:rgba(16,185,129,.1);color:#34D399;border:1px solid rgba(16,185,129,.3);}
     #productsTable th,#productsTable td{white-space:nowrap;}
+    #productsTable{--bs-table-bg:transparent!important;--bs-table-hover-bg:transparent!important;}
+    #productsTable thead th{background:rgba(30,41,59,.8)!important;}
+    #productsTable tbody td{background:#0B1120;}
+    #productsTable tbody tr:hover td{background:rgba(30,41,59,.45)!important;}
+    .product-row{transition:background .15s ease;}
+    .product-row:hover{background:rgba(30,41,59,.45)!important;}
+    .btn.act-dark{background:#1E293B;color:#E2E8F0;border:1px solid #334155;}
+    .btn.act-dark:hover{background:#334155!important;color:#fff!important;border-color:#475569;}
 </style>
 
 <div class="container-fluid py-4">
@@ -187,18 +195,18 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
     </div>
 
     <!-- Products Table with Multi-Branch Stock -->
-    <div class="card border-0" style="background:var(--card);border:1px solid rgba(239,68,68,.1);overflow-x:auto;">
+    <div class="card border-0 shadow-sm" style="background:#0F172A;background-color:#0F172A;--bs-card-bg:#0F172A;border:1px solid #1E293B;border-radius:18px;overflow-x:auto;">
         <div class="table-responsive" style="min-width:0;">
             <table class="table table-hover align-middle mb-0" id="productsTable">
                 <thead>
-                    <tr style="background:linear-gradient(90deg,#111827,#1e293b);border-bottom:2px solid rgba(0,229,255,.15);">
-                        <th class="py-3 ps-4" style="color:var(--cyan);font-weight:700;font-size:.75rem;">SKU</th>
-                        <th class="py-3" style="color:var(--cyan);font-weight:700;font-size:.75rem;">Part Description</th>
-                        <th class="py-3" style="color:var(--cyan);font-weight:700;font-size:.75rem;">Brand</th>
-                        <th class="py-3" style="color:var(--cyan);font-weight:700;font-size:.75rem;">Type</th>
-                        <th class="py-3" style="color:var(--cyan);font-weight:700;font-size:.75rem;">Color</th>
-                        <th class="py-3" style="color:var(--cyan);font-weight:700;font-size:.75rem;">Size</th>
-                        <th class="py-3" style="color:var(--cyan);font-weight:700;font-size:.75rem;">Price</th>
+                    <tr style="background:rgba(30,41,59,.8);border-bottom:1px solid rgba(30,41,59,0.7);">
+                        <th class="py-3 ps-4" style="color:#22D3EE;font-weight:700;font-size:.75rem;">SKU</th>
+                        <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Part Description</th>
+                        <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Brand</th>
+                        <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Type</th>
+                        <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Color</th>
+                        <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Size</th>
+                        <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Price</th>
                         @foreach($branches as $branch)
                         <th class="py-3 bc-hdr" style="color:{{ $bc[$branch->id] ?? '#94A3B8' }};font-weight:700;">
                             <span class="bc-dot" style="background:{{ $bc[$branch->id] ?? '#94A3B8' }};"></span>{{ $ba[$branch->id] }}
@@ -208,27 +216,27 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
                         <th class="py-3 text-center pe-4" style="color:var(--cyan);font-weight:700;font-size:.75rem;width:90px;">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody style="background:#0B1120;">
                     @forelse($products as $product)
-                    <tr class="product-row" style="background:#fff;border-bottom:1px solid #e2e8f0;"
+                    <tr class="product-row" style="background:#0B1120;border-bottom:1px solid rgba(30,41,59,0.6);"
                         data-name="{{ strtolower($product->name) }}"
                         data-brand="{{ strtolower($product->brand ?? '') }}"
                         data-type="{{ strtolower($product->type ?? '') }}"
                         data-serial="{{ strtolower($product->serial_number) }}">
-                        <td class="ps-4 fw-bold" style="font-family:monospace;color:#0f172a;font-size:.82rem;">{{ $product->serial_number }}</td>
-                        <td class="fw-bold" style="color:#0f172a;font-size:.85rem;">{{ $product->name }}</td>
-                        <td><span class="badge" style="background:#e2e8f0;color:#0f172a;font-weight:600;font-size:.72rem;">{{ $product->brand ?? 'N/A' }}</span></td>
-                        <td><span class="badge" style="background:#e2e8f0;color:#0f172a;font-weight:600;font-size:.72rem;">{{ $product->type ?? 'Uncategorized' }}</span></td>
+                        <td class="ps-4 fw-bold" style="font-family:monospace;color:#22D3EE;font-size:.82rem;">{{ $product->serial_number }}</td>
+                        <td class="fw-semibold" style="color:#fff;font-size:.85rem;">{{ $product->name }}</td>
+                        <td><span class="badge" style="background:#1E293B;color:#CBD5E1;border:1px solid #334155;font-weight:600;font-size:.72rem;">{{ $product->brand ?? 'N/A' }}</span></td>
+                        <td><span class="badge" style="background:#1E293B;color:#CBD5E1;border:1px solid #334155;font-weight:600;font-size:.72rem;">{{ $product->type ?? 'Uncategorized' }}</span></td>
                         <td>
                             @if($product->color)
-                            <span style="display:inline-flex;align-items:center;gap:4px;color:#0f172a;font-size:.82rem;">
-                                <span style="width:12px;height:12px;border-radius:50%;background:{{ productColorHex($product->color) }};display:inline-block;border:1px solid #cbd5e1;"></span>
+                            <span style="display:inline-flex;align-items:center;gap:4px;color:#94A3B8;font-size:.82rem;">
+                                <span style="width:12px;height:12px;border-radius:50%;background:{{ productColorHex($product->color) }};display:inline-block;border:1px solid #334155;"></span>
                                 {{ $product->color }}
                             </span>
-                            @else <span style="color:#94a3b8;">&mdash;</span> @endif
+                            @else <span style="color:#94A3B8;">—</span> @endif
                         </td>
-                        <td style="color:#0f172a;font-size:.82rem;">{{ $product->size ?? '&mdash;' }}</td>
-                        <td class="fw-bold" style="color:#16a34a;font-size:.82rem;">&#8369;{{ number_format($product->price, 2) }}</td>
+                        <td style="color:#94A3B8;font-size:.82rem;">{{ $product->size ?: '—' }}</td>
+                        <td class="fw-bold" style="color:#34D399;font-size:.82rem;">&#8369;{{ number_format($product->price, 2) }}</td>
                         @foreach($branches as $branch)
                         @php $qty = $product->branch_stock[$branch->id] ?? 0; @endphp
                         <td style="text-align:center;">
@@ -249,10 +257,10 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
                         <td class="text-center pe-4">
                             @if($isMainBranch)
                             <div class="btn-group btn-group-sm">
-                                <a href="{{ route('products.edit', $product->id) }}" class="btn" style="background:rgba(0,229,255,.1);color:var(--cyan);border:none;border-radius:6px;padding:5px 10px;text-decoration:none;" title="Edit">
+                                <a href="{{ route('products.edit', $product->id) }}" class="btn act-dark" style="border-radius:6px;padding:5px 10px;text-decoration:none;" title="Edit">
                                     <i class="bi bi-pencil-fill"></i>
                                 </a>
-                                <button type="button" class="btn ms-1" style="background:rgba(239,68,68,.1);color:#EF4444;border:none;border-radius:6px;padding:5px 10px;" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="{{ $product->id }}" data-name="{{ $product->name }}" title="Delete">
+                                <button type="button" class="btn act-dark ms-1" style="border-radius:6px;padding:5px 10px;" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="{{ $product->id }}" data-name="{{ $product->name }}" title="Delete">
                                     <i class="bi bi-trash-fill"></i>
                                 </button>
                             </div>
@@ -260,7 +268,7 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
                         </td>
                     </tr>
                     @empty
-                    <tr>
+                    <tr style="background:#0B1120;">
                         <td colspan="{{ 7 + count($branches) + 2 }}" class="text-center py-5" style="color:#64748b;">
                             <i class="bi bi-inboxes fs-1 d-block mb-3" style="color:#94a3b8;"></i>
                             <span class="fs-5">No parts found.</span>

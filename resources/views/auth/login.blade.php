@@ -136,9 +136,21 @@
             <span class="status-label">System Online</span>
         </div>
 
+        @php
+        $disabledNote = request()->query('disabled');
+        @endphp
+
         <div class="login-card">
             <div class="card-title">System Access</div>
             <div class="card-sub">Inventory &amp; POS Management</div>
+
+            @if($disabledNote)
+                <div class="error-alert">
+                    <ul>
+                        <li><i class="bi bi-shield-lock-fill me-1"></i> {{ $disabledNote }}</li>
+                    </ul>
+                </div>
+            @endif
 
             @if ($errors->any())
                 <div class="error-alert">

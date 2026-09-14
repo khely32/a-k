@@ -14,23 +14,41 @@ class CheckBranchActive
     {
         $user = Auth::user();
 
-        if ($user && $user->role !== 'owner' && !empty($user->branch_id)) {
-            $branch = Branch::find($user->branch_id);
-
-            if ($branch && !$branch->is_active) {
+        if ($user) {
+            if ($user->role !== 'owner' && $user->is_active === false) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
                 if ($request->expectsJson()) {
                     return response()->json([
-                        'error' => 'Your branch has been disabled by management.',
+                        'error' => 'Your account has been disabled by the owner. System access is denied.',
                     ], 403);
                 }
 
                 return redirect()->route('login')->withErrors([
-                    'email' => 'Your branch is currently disabled by the owner. System access is denied.',
+                    'email' => 'Your account is currently disabled by the owner. System access is denied.',
                 ]);
+            }
+
+            if ($user->role !== 'owner' && !empty($user->branch_id)) {
+                $branch = Branch::find($user->branch_id);
+
+                if ($branch && !$branch->is_active) {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'error' => 'Your branch has been disabled by the owner. System access is denied.',
+                        ], 403);
+                    }
+
+                    return redirect()->route('login')->withErrors([
+                        'email' => 'Your branch is currently disabled by the owner. System access is denied.',
+                    ]);
+                }
             }
         }
 

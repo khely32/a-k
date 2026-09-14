@@ -15,33 +15,45 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $mainBranch = \App\Models\Branch::whereRaw('LOWER(branch_name) LIKE ?', ['%moroboro%'])->first();
-
-        // Admin (full control)
-        User::firstOrCreate(
-            ['email' => 'admin'],
-            [
-                'name' => 'Owner Admin',
-                'password' => Hash::make('admin123456789'),
-                'role' => 'owner',
-                'branch_id' => $mainBranch ? $mainBranch->id : null,
-            ]
-        );
-
-        // One staff user per branch
         $branches = \App\Models\Branch::orderBy('id')->get();
+
+        // One user per branch; the Moroboro branch account is the owner/admin
         foreach ($branches as $branch) {
-            $userName = $branch->branch_name . ' staff';
+            $isMain = str_contains(strtolower($branch->branch_name), 'moroboro');
             $slug = strtolower(str_replace(' ', '', preg_replace('/\s+Branch$/i', '', $branch->branch_name)));
-            User::firstOrCreate(
-                ['email' => "{$slug}@akmotorcycle.com"],
+            $email = $isMain ? 'admin' : "{$slug}@akmotorcycle.com";
+            $plainPassword = $isMain ? 'admin123456789' : 'password';
+
+            $user = User::firstOrCreate(
+                ['email' => $email],
                 [
-                    'name' => $userName,
-                    'password' => Hash::make('password'),
-                    'role' => 'staff',
+                    'name' => $branch->branch_name,
+                    'password' => Hash::make($plainPassword),
+                    'plain_password' => $plainPassword,
+                    'role' => $isMain ? 'owner' : 'staff',
                     'branch_id' => $branch->id,
                 ]
             );
+
+            // Always refresh name/role/plain_password so re-seeding fixes existing records
+            $user->update([
+                'name' => $branch->branch_name,
+                'role' => $isMain ? 'owner' : 'staff',
+                'branch_id' => $branch->id,
+                'plain_password' => $plainPassword,
+            ]);
+
+            // Remove leftover accounts on this branch (e.g. old "X Branch staff")
+            User::where('branch_id', $branch->id)
+                ->where('email', '!=', $email)
+                ->delete();
         }
+
+        // Guarantee a single owner account only
+        User::where('role', 'owner')
+            ->where('email', '!=', 'admin')
+            ->each(function ($extraOwner) {
+                $extraOwner->delete();
+            });
     }
 }

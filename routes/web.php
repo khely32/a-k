@@ -67,13 +67,18 @@ Route::middleware(['auth'])->group(function () {
         if ($user->role === 'owner') {
             return response()->json(['active' => true, 'is_owner' => true]);
         }
+        if ($user->is_active === false) {
+            return response()->json(['active' => false, 'is_owner' => false, 'reason' => 'Your account has been disabled by the owner.']);
+        }
         if (empty($user->branch_id)) {
             return response()->json(['active' => true, 'is_owner' => false]);
         }
         $branch = \App\Models\Branch::find($user->branch_id);
+        $branchActive = $branch ? $branch->is_active : false;
         return response()->json([
-            'active'   => $branch ? $branch->is_active : false,
+            'active'   => $branchActive,
             'is_owner' => false,
+            'reason'   => $branchActive ? null : 'Your branch has been disabled by the owner. The system is currently offline.',
         ]);
     })->name('api.branch-status');
 
@@ -174,6 +179,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/users/{user}/reveal-password', [\App\Http\Controllers\UserController::class, 'revealPassword'])->name('users.revealPassword');
     Route::post('/users/{user}/reset-password', [\App\Http\Controllers\UserController::class, 'resetPassword'])->name('users.resetPassword');
     Route::post('/users/{user}/update-username', [\App\Http\Controllers\UserController::class, 'updateUsername'])->name('users.updateUsername');
+    Route::post('/users/{user}/toggle-active', [\App\Http\Controllers\UserController::class, 'toggleUserStatus'])->name('users.toggleActive');
     Route::post('/branches/{branch}/toggle', [\App\Http\Controllers\UserController::class, 'toggleBranch'])->name('branches.toggle');
 
 }); // This is now the ONLY closing bracket for the group block

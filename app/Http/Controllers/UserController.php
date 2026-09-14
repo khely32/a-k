@@ -40,7 +40,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $allowedRoles = in_array($user->role, ['admin', 'owner']) ? 'owner,staff,admin,manager,cashier' : 'staff,manager,cashier';
+        $allowedRoles = in_array($user->role, ['owner']) ? 'owner,staff,manager,cashier' : 'staff,manager,cashier';
         
         $request->validate([
             'name' => 'required|string|max:255',
@@ -61,6 +61,7 @@ class UserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'plain_password' => $request->password,
             'role' => $request->role,
             'branch_id' => $branchId,
             'branch' => $branchName,
@@ -72,7 +73,11 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $authUser = auth()->user();
-        
+
+        if ($user->role === 'owner') {
+            abort(403);
+        }
+
         if (!in_array($authUser->role, ['admin', 'owner']) && $authUser->branch_id !== $user->branch_id) {
             abort(403);
         }
@@ -90,11 +95,15 @@ class UserController extends Controller
     {
         $authUser = auth()->user();
 
+        if ($user->role === 'owner') {
+            abort(403);
+        }
+
         if (!in_array($authUser->role, ['admin', 'owner']) && $authUser->branch_id !== $user->branch_id) {
             abort(403);
         }
 
-        $allowedRoles = in_array($authUser->role, ['admin', 'owner']) ? 'owner,staff,admin,manager,cashier' : 'staff,manager,cashier';
+        $allowedRoles = in_array($authUser->role, ['owner']) ? 'owner,staff,manager,cashier' : 'staff,manager,cashier';
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -118,6 +127,7 @@ class UserController extends Controller
         if ($request->filled('password')) {
             $request->validate(['password' => 'string|min:8']);
             $data['password'] = Hash::make($request->password);
+            $data['plain_password'] = $request->password;
         }
 
         $user->update($data);
@@ -130,9 +140,47 @@ class UserController extends Controller
         if ($user->id === auth()->id()) {
             return back()->withErrors(['error' => 'You cannot delete yourself.']);
         }
+
+        if ($user->role === 'owner') {
+            return back()->withErrors(['error' => 'The owner account cannot be deleted.']);
+        }
         
         $user->delete();
         return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+    }
+
+    public function toggleUserStatus(Request $request, User $user)
+    {
+        $authUser = auth()->user();
+        if (!in_array($authUser->role, ['owner'])) {
+            abort(403);
+        }
+
+        if ($user->role === 'owner') {
+            return response()->json([
+                'success' => false,
+                'is_active' => $user->is_active,
+                'message' => 'The owner account cannot be disabled.',
+            ], 422);
+        }
+
+        if ($user->id === $authUser->id) {
+            return response()->json([
+                'success' => false,
+                'is_active' => $user->is_active,
+                'message' => 'You cannot disable your own account.',
+            ], 422);
+        }
+
+        $user->update(['is_active' => !$user->is_active]);
+
+        return response()->json([
+            'success' => true,
+            'is_active' => $user->is_active,
+            'message' => $user->is_active
+                ? 'Account enabled.'
+                : 'Account disabled. The user will be signed out and blocked from logging in.',
+        ]);
     }
 
     public function revealPassword(Request $request, User $user)
@@ -143,7 +191,7 @@ class UserController extends Controller
         }
 
         return response()->json([
-            'password' => '(Passwords are stored encrypted and cannot be revealed for security reasons.)',
+            'password' => $user->plain_password ?? '(no password stored)',
         ]);
     }
 
@@ -160,6 +208,7 @@ class UserController extends Controller
 
         $user->update([
             'password' => Hash::make($request->new_password),
+            'plain_password' => $request->new_password,
         ]);
 
         return response()->json(['success' => true, 'message' => 'Password updated successfully.']);
@@ -172,12 +221,28 @@ class UserController extends Controller
             abort(403);
         }
 
+        if ($branch->isMainBranch()) {
+            return response()->json([
+                'success' => false,
+                'is_active' => $branch->is_active,
+                'message' => 'The main branch cannot be disabled.',
+            ], 422);
+        }
+
+        if ($branch->id === $authUser->branch_id) {
+            return response()->json([
+                'success' => false,
+                'is_active' => $branch->is_active,
+                'message' => 'You cannot disable your own branch.',
+            ], 422);
+        }
+
         $branch->update(['is_active' => !$branch->is_active]);
 
         return response()->json([
             'success' => true,
             'is_active' => $branch->is_active,
-            'message' => $branch->is_active ? 'Branch enabled.' : 'Branch disabled. Active sessions will be logged out.',
+            'message' => $branch->is_active ? 'Branch enabled.' : 'Branch disabled. Users of this branch are automatically signed out.',
         ]);
     }
 

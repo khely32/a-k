@@ -106,6 +106,7 @@ class ForgotPasswordController extends Controller
         }
 
         $user->password = Hash::make($request->password);
+        $user->plain_password = $request->password;
         $user->session_id = null;
         $user->save();
 

@@ -14,11 +14,13 @@ protected $fillable = [
     'name',
     'email',
     'password',
+    'plain_password',
     'role',
     'branch',
     'branch_id',
     'session_id',
-    'security_contact'
+    'security_contact',
+    'is_active',
 ];
 
     protected $hidden = [
@@ -43,10 +45,20 @@ protected $fillable = [
         return strtoupper($branchName);
     }
 
+    public function branchDisplayName(): string
+    {
+        if (!empty($this->branch)) {
+            return $this->branch;
+        }
+
+        return (string) optional($this->branch()->first())->branch_name;
+    }
+
     protected function casts(): array
     {
         return [
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 }

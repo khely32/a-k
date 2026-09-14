@@ -153,6 +153,48 @@
         background: rgba(0, 230, 118, 0.06);
         border-color: rgba(0, 230, 118, 0.2);
     }
+    #product_results {
+        background: #0F172A;
+        border: 1px solid rgba(30, 41, 59, 0.8);
+        border-radius: 12px;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 230, 118, 0.06);
+        overflow: hidden;
+        max-height: 340px;
+        overflow-y: auto;
+        z-index: 1050;
+    }
+    #product_results .list-group {
+        --bs-list-group-bg: transparent;
+        background: transparent;
+        border-radius: 0;
+    }
+    #product_results .list-group-item {
+        --bs-list-group-bg: transparent;
+        background: #0B1120;
+        color: #fff;
+        border: none;
+        border-bottom: 1px solid rgba(30, 41, 59, 0.6);
+        border-radius: 0;
+        padding: 12px 16px;
+        transition: background 0.15s ease;
+    }
+    #product_results .list-group-item:last-child { border-bottom: none; }
+    #product_results .list-group-item:hover,
+    #product_results .list-group-item:focus {
+        background: rgba(30, 41, 59, 0.7);
+        color: rgba(0, 230, 118, 0.4);
+        outline: none;
+    }
+    #product_results .fw-semibold {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    #product_results small.pr-sub {
+        color: #22D3EE;
+        font-family: 'Courier New', monospace;
+        font-size: 0.74rem;
+    }
     .alert-success {
         background: rgba(0, 230, 118, 0.08);
         border: 1px solid rgba(0, 230, 118, 0.3);
@@ -346,7 +388,7 @@ productSearch.addEventListener('input', function () {
         matches.forEach(p => {
             html += `<a href="#" class="list-group-item list-group-item-action" data-id="${p.id}" data-name="${p.name}">`;
             html += `<div class="fw-semibold">${p.name}</div>`;
-            html += `<small style="color:#94A3B8">${p.brand || ''} ${p.serial_number ? '#'+p.serial_number : ''}</small>`;
+            html += `<small class="pr-sub">${p.brand || ''} ${p.serial_number ? '#'+p.serial_number : ''}</small>`;
             html += '</a>';
         });
         html += '</div>';

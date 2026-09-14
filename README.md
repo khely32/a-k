@@ -79,9 +79,8 @@ On first boot the stack automatically:
 
 ### Default login
 
-- Owner: `admin@akmotorcycle.com` / `admin123`
-- Managers: `manager1@akmotorcycle.com` ... `manager4@akmotorcycle.com` / `password`
-- Cashiers: `cashier1@akmotorcycle.com` ... `cashier4@akmotorcycle.com` / `password`
+- Owner (Moroboro Branch): `admin` / `admin123456789`
+- Branch staff: email is a username-style based on the branch, e.g. `poblacion@akmotorcycle.com` / `password`
 
 ### Useful commands
 

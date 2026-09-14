@@ -37,12 +37,11 @@
                         <select name="role" id="role" class="form-select @error('role') is-invalid @enderror" required>
                             <option value="cashier" {{ old('role', $user->role) == 'cashier' ? 'selected' : '' }}>Cashier</option>
                             <option value="manager" {{ old('role', $user->role) == 'manager' ? 'selected' : '' }}>Manager</option>
-                            <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
                         </select>
                         @error('role') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="branch_id" class="form-label">Branch (Optional for Admin)</label>
+                        <label for="branch_id" class="form-label">Branch (Optional for Owner)</label>
                         <select name="branch_id" id="branch_id" class="form-select @error('branch_id') is-invalid @enderror">
                             <option value="">None / All Branches</option>
                             @foreach($branches as $branch)

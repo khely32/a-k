@@ -29,6 +29,15 @@
         justify-content: space-between;
         flex-wrap: wrap;
         gap: 12px;
+        min-height: 58px;
+    }
+    .branch-header-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 14px;
+        line-height: 1;
+        min-height: 24px;
     }
     .branch-title {
         font-size: 1.05rem;
@@ -74,6 +83,9 @@
         border: none;
         outline: none;
         flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
     }
     .toggle-switch.on { background: #10B981; }
     .toggle-switch.off { background: #475569; }
@@ -89,6 +101,25 @@
         box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
     .toggle-switch.on .toggle-knob { transform: translateX(20px); }
+    .toggle-switch.sm { width: 36px; height: 20px; border-radius: 10px; }
+    .toggle-switch.sm .toggle-knob { width: 14px; height: 14px; top: 3px; left: 3px; }
+    .toggle-switch.sm.on .toggle-knob { transform: translateX(16px); }
+
+    .user-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    .status-label {
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        min-width: 58px;
+        text-align: left;
+    }
+    .status-label.active-text { color: #34D399; }
+    .status-label.inactive-text { color: #64748B; }
 
     .role-badge {
         padding: 3px 12px;
@@ -273,11 +304,11 @@
             <i class="bi bi-building"></i>
             {{ $branchName }}
         </div>
-        <div style="display:flex;align-items:center;gap:12px;">
+        <div style="display:flex;align-items:center;gap:12px;" class="branch-header-actions">
             <span id="badge-{{ $branchId }}" class="{{ $branchIsActive ? 'badge-active' : 'badge-disabled' }}">
                 {{ $branchIsActive ? 'Active' : 'Disabled' }}
             </span>
-            @if($isOwner && $branchId !== 8)
+            @if($isOwner && $branchObj && !$branchObj->isMainBranch())
             <button
                 class="toggle-switch {{ $branchIsActive ? 'on' : 'off' }}"
                 id="toggle-{{ $branchId }}"
@@ -353,6 +384,23 @@
                         </span>
                     </td>
                     <td class="owner-only px-4 py-3" style="text-align:right;">
+                        @if(strtolower($user->role) !== 'owner')
+                        <div class="user-status">
+                            <span class="status-label {{ $user->is_active ? 'active-text' : 'inactive-text' }}" id="acc-label-{{ $user->id }}">
+                                {{ $user->is_active ? 'ACTIVE' : 'INACTIVE' }}
+                            </span>
+                            <button
+                                class="toggle-switch sm {{ $user->is_active ? 'on' : 'off' }}"
+                                id="acc-toggle-{{ $user->id }}"
+                                onclick="toggleUserStatus({{ $user->id }})"
+                                title="{{ $user->is_active ? 'Disable this account' : 'Enable this account' }}"
+                            >
+                                <div class="toggle-knob"></div>
+                            </button>
+                        </div>
+                        @else
+                        <span style="font-size:0.68rem;color:#6B7280;font-weight:600;">&mdash;</span>
+                        @endif
                     </td>
                 </tr>
                 @endforeach
@@ -473,6 +521,46 @@ function toggleBranch(branchId) {
         }
     })
     .catch(function(){ showToast('Failed to toggle branch.', 'error'); });
+}
+
+function toggleUserStatus(userId) {
+    var btn = document.getElementById('acc-toggle-' + userId);
+    if (btn.dataset.busy === '1') return;
+    btn.dataset.busy = '1';
+
+    fetch('/users/' + userId + '/toggle-active', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        btn.dataset.busy = '';
+        if (d.success) {
+            var label = document.getElementById('acc-label-' + userId);
+            if (d.is_active) {
+                btn.className = 'toggle-switch sm on';
+                btn.title = 'Disable this account';
+                label.className = 'status-label active-text';
+                label.textContent = 'ACTIVE';
+            } else {
+                btn.className = 'toggle-switch sm off';
+                btn.title = 'Enable this account';
+                label.className = 'status-label inactive-text';
+                label.textContent = 'INACTIVE';
+            }
+            showToast(d.message, d.is_active ? 'success' : 'error');
+        } else {
+            showToast(d.message || 'Failed to toggle account.', 'error');
+        }
+    })
+    .catch(function(){
+        btn.dataset.busy = '';
+        showToast('Failed to toggle account.', 'error');
+    });
 }
 
 function showEmailEdit(userId) {
