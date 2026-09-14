@@ -226,6 +226,38 @@
     .inv-modal-title { color: var(--green); font-weight: 800; }
     .inv-modal-body { padding: 18px 20px; }
     .inv-modal-footer { border-top: 1px solid rgba(0, 230, 118, 0.15); padding: 14px 20px; }
+
+    .inv-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 14px 18px;
+        background: #0F172A;
+        border-top: 1px solid #1E293B;
+    }
+    .inv-page-info { color: #94A3B8; font-size: 0.78rem; }
+    .inv-page-info b { color: #E2E8F0; }
+    .inv-page-controls { display: flex; align-items: center; gap: 10px; }
+    .inv-page-num { color: #64748B; font-size: 0.75rem; font-weight: 600; }
+    .inv-page-num b { color: #34D399; }
+    .inv-page-btn {
+        background: #1E293B;
+        border: 1px solid #334155;
+        color: #E2E8F0;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 6px 14px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .inv-page-btn:hover:not(:disabled) { background: #334155; color: #fff; border-color: #475569; }
+    .inv-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 
 <div class="container-fluid py-4">
@@ -316,7 +348,7 @@
                         data-brand="{{ $product->brand ?? '' }}"
                         data-color="{{ $product->color ?? '' }}">
 
-                        <td class="inv-id">{{ $product->id }}</td>
+                        <td class="inv-id">{{ $loop->index + 1 }}</td>
 
                         <td>
                             @if($product->serial_number)
@@ -406,6 +438,14 @@
                 </tr>
             </tbody>
         </table>
+        <div class="inv-pagination">
+            <span class="inv-page-info">Showing <b id="invRangeStart">0</b>&ndash;<b id="invRangeEnd">0</b> of <b id="invTotal">0</b></span>
+            <div class="inv-page-controls">
+                <button type="button" class="inv-page-btn" id="invPrev"><i class="bi bi-chevron-left"></i> Prev</button>
+                <span class="inv-page-num">Page <b id="invPageNow">1</b> / <b id="invPageCount">1</b></span>
+                <button type="button" class="inv-page-btn" id="invNext">Next <i class="bi bi-chevron-right"></i></button>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -456,6 +496,17 @@
         const colorSelect = document.getElementById('color-filter');
         const rows = Array.from(document.querySelectorAll('.inventory-row'));
         const noResults = document.getElementById('no-filter-results');
+
+        const PAGE_SIZE = 10;
+        let currentPage = 1;
+        let filteredRows = [];
+        const pageInfoStart = document.getElementById('invRangeStart');
+        const pageInfoEnd = document.getElementById('invRangeEnd');
+        const pageInfoTotal = document.getElementById('invTotal');
+        const pageNowEl = document.getElementById('invPageNow');
+        const pageCountEl = document.getElementById('invPageCount');
+        const prevBtn = document.getElementById('invPrev');
+        const nextBtn = document.getElementById('invNext');
 
         function optionList(items) {
             const map = {};
@@ -518,8 +569,8 @@
             const category = (categorySelect.value || '').toLowerCase().trim();
             const brand = (brandSelect.value || '').toLowerCase().trim();
             const color = (colorSelect.value || '').toLowerCase().trim();
-            let visible = 0;
 
+            filteredRows = [];
             rows.forEach(function (row) {
                 const name = row.dataset.name || '';
                 const serial = row.dataset.serial || '';
@@ -532,17 +583,44 @@
                 const matchesBrand = brand === '' || rowBrand === brand;
                 const matchesColor = color === '' || rowColor === color;
 
-                const show = matchesQuery && matchesCategory && matchesBrand && matchesColor;
-                row.style.display = show ? '' : 'none';
-                if (show) visible++;
+                if (matchesQuery && matchesCategory && matchesBrand && matchesColor) {
+                    filteredRows.push(row);
+                }
             });
+
+            currentPage = 1;
+            renderList();
+        }
+
+        function renderList() {
+            const total = filteredRows.length;
+            const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+            if (currentPage > pageCount) currentPage = pageCount;
+            if (currentPage < 1) currentPage = 1;
+
+            rows.forEach(function (row) {
+                row.style.display = 'none';
+            });
+
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const end = Math.min(start + PAGE_SIZE, total);
+            for (let i = start; i < end; i++) {
+                filteredRows[i].style.display = '';
+            }
 
             if (rows.length === 0) {
                 noResults.style.display = 'none';
-                return;
+            } else {
+                noResults.style.display = total === 0 ? '' : 'none';
             }
 
-            noResults.style.display = visible === 0 ? '' : 'none';
+            pageInfoStart.textContent = total ? start + 1 : 0;
+            pageInfoEnd.textContent = total ? end : 0;
+            pageInfoTotal.textContent = total;
+            pageNowEl.textContent = currentPage;
+            pageCountEl.textContent = pageCount;
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= pageCount;
         }
 
         searchInput.addEventListener('input', applyFilters);
@@ -556,7 +634,22 @@
         });
         colorSelect.addEventListener('change', applyFilters);
 
+        prevBtn.addEventListener('click', function () {
+            if (currentPage > 1) {
+                currentPage--;
+                renderList();
+            }
+        });
+        nextBtn.addEventListener('click', function () {
+            const pageCount = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+            if (currentPage < pageCount) {
+                currentPage++;
+                renderList();
+            }
+        });
+
         populateBrandOptions();
+        applyFilters();
 
         document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
             new bootstrap.Tooltip(el);

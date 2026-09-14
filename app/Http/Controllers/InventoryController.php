@@ -17,7 +17,7 @@ class InventoryController extends Controller
 
         if (strtolower($user->role) === 'owner') {
             $products = Product::select('products.*', 'products.quantity as display_quantity')
-                ->orderBy('name', 'asc')
+                ->orderBy('products.id', 'asc')
                 ->get();
         } else {
             $products = Product::select('products.*', DB::raw('COALESCE(inventories.quantity, 0) as display_quantity'))
@@ -25,7 +25,7 @@ class InventoryController extends Controller
                     $join->on('products.id', '=', 'inventories.product_id')
                          ->where('inventories.branch_id', '=', $branchId);
                 })
-                ->orderBy('products.name', 'asc')
+                ->orderBy('products.id', 'asc')
                 ->get();
         }
 

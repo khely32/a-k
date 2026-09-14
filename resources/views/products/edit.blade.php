@@ -147,9 +147,11 @@
                 {{-- Size --}}
                 <div class="col-md-4">
                     <label class="ep-label" style="color:#94a3b8;">Size</label>
-                    <select name="size" id="size" class="ep-select">
-                        <option value="">Select a size (optional)</option>
-                    </select>
+                    <input type="text" name="size" id="size" class="ep-input"
+                           value="{{ old('size', $product->size) }}"
+                           list="sizeList" autocomplete="off"
+                           placeholder="Type a size, e.g., 1L, 400mL, 17 inch">
+                    <datalist id="sizeList"></datalist>
                 </div>
 
                 {{-- Price --}}
@@ -171,8 +173,8 @@
                            placeholder="0">
                 </div>
 
-                {{-- Color (conditional for paint products) --}}
-                <div class="col-md-6" id="color-field-wrap" style="display:none;">
+                {{-- Color (available for all; used for spray paint) --}}
+                <div class="col-md-6">
                     <label class="ep-label" style="color:#94a3b8;">
                         Color / Shade <span style="color:#64748b;">(Spray Paint)</span>
                     </label>
@@ -183,7 +185,7 @@
                                style="flex:1;">
                         <span id="color-swatch" class="color-swatch-preview"></span>
                     </div>
-                    <p style="color:#475569;font-size:.65rem;margin-top:.3rem;">Appears for spray paint / aerosol product types.</p>
+                    <p style="color:#475569;font-size:.65rem;margin-top:.3rem;">Use for spray paint / aerosol products.</p>
                 </div>
             </div>
 
@@ -218,45 +220,25 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const typeInput = document.getElementById('type');
-    const sizeSelect = document.getElementById('size');
-    const currentSize = '{{ $product->size }}';
+    const sizeInput = document.getElementById('size');
+    const sizeList = document.getElementById('sizeList');
 
     function loadSizes() {
         const category = typeInput.value.trim();
-        sizeSelect.innerHTML = '<option value="">Loading...</option>';
-        sizeSelect.disabled = true;
-
-        if (!category) {
-            sizeSelect.innerHTML = '<option value="">Select a size (optional)</option>';
-            sizeSelect.disabled = false;
-            return;
-        }
+        sizeList.innerHTML = '';
+        if (!category) return;
 
         fetch(`/category-sizes/${encodeURIComponent(category)}`)
             .then(res => res.json())
             .then(sizes => {
-                sizeSelect.innerHTML = '<option value="">Select a size (optional)</option>';
-                if (sizes.length > 0) {
-                    sizes.forEach(size => {
-                        const opt = document.createElement('option');
-                        opt.value = size;
-                        opt.textContent = size;
-                        if (size === currentSize) opt.selected = true;
-                        sizeSelect.appendChild(opt);
-                    });
-                } else {
+                sizeList.innerHTML = '';
+                sizes.forEach(size => {
                     const opt = document.createElement('option');
-                    opt.value = currentSize || category;
-                    opt.textContent = currentSize || category + ' (custom)';
-                    opt.selected = true;
-                    sizeSelect.appendChild(opt);
-                }
-                sizeSelect.disabled = false;
+                    opt.value = size;
+                    sizeList.appendChild(opt);
+                });
             })
-            .catch(() => {
-                sizeSelect.innerHTML = '<option value="">Select a size (optional)</option>';
-                sizeSelect.disabled = false;
-            });
+            .catch(() => {});
     }
 
     typeInput.addEventListener('change', loadSizes);
@@ -264,7 +246,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(loadSizes, 200);
     });
 
-    const colorWrap = document.getElementById('color-field-wrap');
     const colorInput = document.getElementById('color');
     const colorSwatch = document.getElementById('color-swatch');
 
@@ -286,20 +267,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return '#1e293b';
     }
 
-    function isPaintCategory(value) {
-        return /paint|spray|aerosol/i.test(value || '');
-    }
-
-    function toggleColorField() {
-        colorWrap.style.display = isPaintCategory(typeInput.value) ? '' : 'none';
-    }
-
     colorInput.addEventListener('input', function() {
         colorSwatch.style.background = swatchHex(colorInput.value);
     });
-    typeInput.addEventListener('change', toggleColorField);
-    typeInput.addEventListener('input', toggleColorField);
-    toggleColorField();
     colorSwatch.style.background = swatchHex(colorInput.value);
 
     if (typeInput.value.trim()) {
