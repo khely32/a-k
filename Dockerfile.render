@@ -30,12 +30,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         exif \
     && docker-php-ext-enable pdo_pgsql pgsql gd zip exif
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2.9 /usr/bin/composer /usr/bin/composer
+ENV COMPOSER_MEMORY_LIMIT=-1
 
 WORKDIR /var/www/html
 
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction --no-progress
 
 COPY . .
 COPY --from=assets /build/public/build ./public/build
