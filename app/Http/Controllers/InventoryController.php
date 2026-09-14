@@ -15,19 +15,13 @@ class InventoryController extends Controller
         $user = Auth::user();
         $branchId = $user->branch_id;
 
-        if (strtolower($user->role) === 'owner') {
-            $products = Product::select('products.*', 'products.quantity as display_quantity')
-                ->orderBy('products.id', 'asc')
-                ->get();
-        } else {
-            $products = Product::select('products.*', DB::raw('COALESCE(inventories.quantity, 0) as display_quantity'))
-                ->leftJoin('inventories', function ($join) use ($branchId) {
-                    $join->on('products.id', '=', 'inventories.product_id')
-                         ->where('inventories.branch_id', '=', $branchId);
-                })
-                ->orderBy('products.id', 'asc')
-                ->get();
-        }
+        $products = Product::select('products.*', DB::raw('COALESCE(inventories.quantity, 0) as display_quantity'))
+            ->leftJoin('inventories', function ($join) use ($branchId) {
+                $join->on('products.id', '=', 'inventories.product_id')
+                     ->where('inventories.branch_id', '=', $branchId);
+            })
+            ->orderBy('products.id', 'asc')
+            ->get();
 
         return view('inventory.index', compact('user', 'products'));
     }

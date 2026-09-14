@@ -22,32 +22,37 @@ class PosController extends Controller
     {
         $search = trim($request->search ?? '');
         $category = trim($request->category ?? '');
+        $branchId = auth()->user()->branch_id;
 
         $query = Product::select([
-                'id',
-                'name as part_name',
-                'serial_number as item_code',
-                'price',
-                'quantity as stock_level',
-                'brand',
-                'type'
+                'products.id',
+                'products.name as part_name',
+                'products.serial_number as item_code',
+                'products.price',
+                'inventories.quantity as stock_level',
+                'products.brand',
+                'products.type'
             ])
-            ->where('quantity', '>', 0);
+            ->join('inventories', function ($join) use ($branchId) {
+                $join->on('products.id', '=', 'inventories.product_id')
+                     ->where('inventories.branch_id', '=', $branchId)
+                     ->where('inventories.quantity', '>', 0);
+            });
 
         if ($category !== '' && strtolower($category) !== 'all') {
-            $query->where('type', $category);
+            $query->where('products.type', $category);
         }
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('serial_number', 'LIKE', "%{$search}%")
-                  ->orWhere('name', 'LIKE', "%{$search}%")
-                  ->orWhere('brand', 'LIKE', "%{$search}%")
-                  ->orWhere('type', 'LIKE', "%{$search}%");
+                $q->where('products.serial_number', 'LIKE', "%{$search}%")
+                  ->orWhere('products.name', 'LIKE', "%{$search}%")
+                  ->orWhere('products.brand', 'LIKE', "%{$search}%")
+                  ->orWhere('products.type', 'LIKE', "%{$search}%");
             });
         }
 
-        $products = $query->orderBy('name')->limit(120)->get();
+        $products = $query->orderBy('products.name')->limit(120)->get();
 
         return response()->json($products);
     }
@@ -70,23 +75,32 @@ class PosController extends Controller
     {
         $productId = $request->input('id');
         $product = Product::findOrFail($productId);
+        $branchId = auth()->user()->branch_id;
+
+        $inventory = Inventory::where('product_id', $productId)
+            ->where('branch_id', $branchId)
+            ->first();
+
+        $availableQty = $inventory ? (int) $inventory->quantity : 0;
 
         $cart = session()->get('cart', []);
 
         if (isset($cart[$product->id])) {
-            if ($cart[$product->id]['qty'] < $product->quantity) {
+            if ($cart[$product->id]['qty'] < $availableQty) {
                 $cart[$product->id]['qty']++;
             }
         } else {
-            $cart[$product->id] = [
-                "name"  => $product->name,
-                "sku"   => $product->serial_number,
-                "price" => $product->price,
-                "brand" => $product->brand,
-                "type"  => $product->type,
-                "stock" => $product->quantity,
-                "qty"   => 1
-            ];
+            if ($availableQty > 0) {
+                $cart[$product->id] = [
+                    "name"  => $product->name,
+                    "sku"   => $product->serial_number,
+                    "price" => $product->price,
+                    "brand" => $product->brand,
+                    "type"  => $product->type,
+                    "stock" => $availableQty,
+                    "qty"   => 1
+                ];
+            }
         }
 
         session()->put('cart', $cart);
@@ -99,10 +113,13 @@ class PosController extends Controller
         $cart = session()->get('cart', []);
         $productId = $request->input('id');
         $qty = (int) $request->input('qty');
+        $branchId = auth()->user()->branch_id;
 
         if (isset($cart[$productId])) {
-            $product = Product::find($productId);
-            $max = $product ? (int) $product->quantity : 999;
+            $inventory = Inventory::where('product_id', $productId)
+                ->where('branch_id', $branchId)
+                ->first();
+            $max = $inventory ? (int) $inventory->quantity : 0;
             $cart[$productId]['qty'] = max(1, min($qty, $max));
             session()->put('cart', $cart);
         }

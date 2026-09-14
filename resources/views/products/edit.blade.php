@@ -169,7 +169,7 @@
                 <div class="col-md-4">
                     <label class="ep-label" style="color:#94a3b8;">Stock Quantity <span style="color:#EF4444;">*</span></label>
                     <input type="number" name="quantity" class="ep-input @error('quantity') is-invalid @enderror"
-                           value="{{ old('quantity', $product->quantity) }}" min="0" required
+                           value="{{ old('quantity', $branchQuantity) }}" min="0" required
                            placeholder="0">
                 </div>
 

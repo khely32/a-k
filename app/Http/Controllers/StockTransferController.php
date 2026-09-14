@@ -177,7 +177,6 @@ class StockTransferController extends Controller
 
         DB::transaction(function () use ($stockTransfer, $sourceInventory, $product, $productId, $fromBranchId, $toBranchId, $transferQty) {
             $sourceInventory->decrement('quantity', $transferQty);
-            $product->decrement('quantity', $transferQty);
 
             $destInventory = Inventory::firstOrCreate(
                 ['product_id' => $productId, 'branch_id' => $toBranchId],

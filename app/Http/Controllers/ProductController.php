@@ -107,7 +107,16 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        return view('products.edit', compact('product'));
+        $branchId = auth()->user()->branch_id;
+        $branchQuantity = 0;
+        $inventory = Inventory::where('product_id', $product->id)
+            ->where('branch_id', $branchId)
+            ->first();
+        if ($inventory) {
+            $branchQuantity = (int) $inventory->quantity;
+        }
+
+        return view('products.edit', compact('product', 'branchQuantity'));
     }
 
     /**
