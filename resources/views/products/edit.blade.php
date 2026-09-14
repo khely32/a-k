@@ -57,8 +57,11 @@
             </h1>
             <p class="mb-0" style="color:#64748b;font-size:.78rem;">Update item attributes, pricing, and stock configuration.</p>
         </div>
-        <a href="{{ request('from') === 'inventory' ? route('inventory.index') : route('products.index') }}" class="ep-btn-cancel">
-            <i class="bi bi-arrow-left"></i> @if(request('from') === 'inventory')Back to Inventory@elseBack to Products@endif
+        @php $fromInventory = request('from') === 'inventory'; @endphp
+        </div>
+        <a href="{{ $fromInventory ? route('inventory.index') : route('products.index') }}" class="ep-btn-cancel">
+            <i class="bi bi-arrow-left"></i>
+            {{ $fromInventory ? 'Back to Inventory' : 'Back to Products' }}
         </a>
     </div>
 
