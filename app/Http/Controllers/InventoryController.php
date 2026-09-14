@@ -40,12 +40,14 @@ class InventoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'serial_number' => 'required|string|max:255|unique:products,serial_number',
-            'name'          => 'required|string|max:255',
-            'brand'         => 'nullable|string|max:255',
-            'type'          => 'nullable|string|max:255',
-            'quantity'      => 'required|integer|min:0',
-            'price'         => 'required|numeric|min:0',
+            'name'        => 'required|string|max:255',
+            'brand'       => 'required|string|max:255',
+            'type'        => 'required|string|max:255',
+            'color'       => 'nullable|string|max:255',
+            'size'        => 'nullable|string|max:255',
+            'quantity'    => 'required|integer|min:0',
+            'price'       => 'required|numeric|min:0',
+            'description' => 'nullable|string',
         ]);
 
         DB::beginTransaction();
@@ -55,12 +57,15 @@ class InventoryController extends Controller
             $branchId = auth()->user()->branch_id ?? 1;
 
             $product = Product::create([
-                'serial_number' => $validated['serial_number'],
-                'name'          => $validated['name'],
-                'brand'         => $validated['brand'],
-                'type'          => $validated['type'],
-                'quantity'      => $validated['quantity'],
-                'price'         => $validated['price'],
+                'name'        => $validated['name'],
+                'brand'       => $validated['brand'],
+                'type'        => $validated['type'],
+                'color'       => $validated['color'] ?? null,
+                'size'        => $validated['size'] ?? null,
+                'quantity'    => $validated['quantity'],
+                'price'       => $validated['price'],
+                'description' => $validated['description'] ?? null,
+                'branch_id'   => $branchId,
             ]);
 
             Inventory::create([
