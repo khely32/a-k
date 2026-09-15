@@ -21,6 +21,18 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+/* Health probe — lets CI/OCR verify a deploy is live without auth
+   (Render free tier has no built-in healthcheck; this is ours). */
+Route::get('/healthz', function () {
+    return response()->json([
+        'status'   => 'ok',
+        'app'      => config('app.name'),
+        'env'      => app()->environment(),
+        'commit'   => trim(exec('git log --oneline -1 --format=%h') ?: 'unknown'),
+        'time'     => now()->toIso8601String(),
+    ]);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Authentication
