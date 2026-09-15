@@ -608,8 +608,35 @@
     </div>
     <div class="col-md-6">
         <div class="rpt-card">
-            <div class="rpt-card-head"><h5><i class="bi bi-pie-chart" style="margin-right:5px;color:var(--r-green)"></i> Stock Status</h5></div>
+            <div class="rpt-card-head"><h5><i class="bi bi-pie-chart" style="margin-right:5px;color:var(--r-green)"></i> Stock Status (All Branches)</h5></div>
             <div class="rpt-card-body"><div class="rpt-chart"><canvas id="pieChart"></canvas></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ STOCK STATUS BY BRANCH (REALTIME, ALL BRANCHES) ═══ -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="rpt-card">
+            <div class="rpt-card-head">
+                <h5><i class="bi bi-grid-1x2-fill" style="margin-right:5px;color:var(--r-cyan)"></i> Stock Status by Branch</h5>
+                <span class="rpt-live-badge" style="font-size:.68rem;background:rgba(0,229,255,.12);color:var(--r-cyan);padding:3px 10px;border-radius:999px;"><i class="bi bi-activity"></i> Real-time &middot; all branches</span>
+            </div>
+            <div class="rpt-card-body">
+                <div class="rpt-chart" style="height:240px;"><canvas id="branchStockChart"></canvas></div>
+                <table class="table table-sm table-hover align-middle mt-3 mb-0" style="color:var(--r-text)">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Branch</th>
+                            <th class="text-center"><span class="d-inline-block" style="width:10px;height:10px;background:#00E676;border-radius:3px;display:inline-block;"></span> In Stock</th>
+                            <th class="text-center"><span style="width:10px;height:10px;background:#FFC107;border-radius:3px;display:inline-block;"></span> Low Stock</th>
+                            <th class="text-center"><span style="width:10px;height:10px;background:#FF2E55;border-radius:3px;display:inline-block;"></span> Out of Stock</th>
+                            <th class="text-center">Items</th>
+                        </tr>
+                    </thead>
+                    <tbody id="branchStockBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -711,7 +738,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     var R = '#FF2E55', G = '#00E676', Y = '#FFC107', B = '#00E5FF', P = '#D500F9';
     var fontColor = '#8A8F9E';
-    var lineChart, pieChart, revSpark, invSpark;
+    var lineChart, pieChart, revSpark, invSpark, branchChart;
 
     function makeSparkline(canvasId, color) {
         var ctx = document.getElementById(canvasId);
@@ -773,9 +800,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
         revSpark = makeSparkline('revSparkline', 'rgb(0, 230, 118)');
         invSpark = makeSparkline('invSparkline', 'rgb(0, 230, 118)');
+
+        branchChart = new Chart(document.getElementById('branchStockChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'In Stock', data: [], backgroundColor: G, stack: 's' },
+                    { label: 'Low Stock', data: [], backgroundColor: Y, stack: 's' },
+                    { label: 'Out of Stock', data: [], backgroundColor: R, stack: 's' }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { color: fontColor, usePointStyle: true } } },
+                scales: {
+                    x: { stacked: true, ticks: { color: fontColor, maxRotation: 45 }, grid: { display: false } },
+                    y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: fontColor, precision: 0 } }
+                }
+            }
+        });
     }
 
-    function updateCharts(lineLabels, lineData, pieData) {
+    function updateCharts(lineLabels, lineData, pieData, branchLabels, branchStacks) {
         if (lineChart) {
             lineChart.data.labels = lineLabels;
             lineChart.data.datasets[0].data = lineData;
@@ -784,6 +831,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (pieChart) {
             pieChart.data.datasets[0].data = pieData;
             pieChart.update();
+        }
+        if (branchChart) {
+            branchLabels = branchLabels || [];
+            branchStacks = branchStacks || { inStock: [], lowStock: [], outOfStock: [] };
+            branchChart.data.labels = branchLabels;
+            branchChart.data.datasets[0].data = branchStacks.inStock;
+            branchChart.data.datasets[1].data = branchStacks.lowStock;
+            branchChart.data.datasets[2].data = branchStacks.outOfStock;
+            branchChart.update();
         }
     }
 
@@ -800,6 +856,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 '<td class="px-3 py-2" style="color:var(--r-muted)">' + escapeHtml(p.brand || '-') + '</td>' +
                 '<td class="px-3 py-2 text-end">' + p.quantity + '</td>' +
                 '<td class="px-3 py-2 text-end" style="color:var(--r-green)">₱' + Number(val).toLocaleString('en', {minimumFractionDigits:2}) + '</td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    function buildBranchStockTable(branches) {
+        var tbody = document.getElementById('branchStockBody');
+        if (!branches || branches.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4" style="color:var(--r-muted)">No branch inventory data</td></tr>';
+            return;
+        }
+        tbody.innerHTML = branches.map(function (b) {
+            var name = escapeHtml(b.branch_name || 'Unknown');
+            var badge = function (n, color) { return '<span class="badge rounded-pill" style="background:' + color + '1a;color:' + color + '">' + n + '</span>'; };
+            return '<tr>' +
+                '<td class="px-3 py-2 fw-semibold">' + name + '</td>' +
+                '<td class="px-3 py-2 text-end" style="color:var(--r-green)">' + (b.in_stock || 0) + '</td>' +
+                '<td class="px-3 py-2 text-end" style="color:var(--r-yellow)">' + (b.low_stock || 0) + '</td>' +
+                '<td class="px-3 py-2 text-end" style="color:var(--r-red)">' + (b.out_of_stock || 0) + '</td>' +
+                '<td class="px-3 py-2 text-end fw-semibold" style="color:var(--r-green)">' +
+                    ((b.in_stock || 0) + (b.low_stock || 0) + (b.out_of_stock || 0)) +
+                '</td>' +
             '</tr>';
         }).join('');
     }
@@ -834,8 +911,16 @@ document.addEventListener('DOMContentLoaded', function () {
         var lineData = (d.topProducts || []).map(function (p) { return p.quantity; });
         var pieData = [d.inStock || 0, d.lowStock || 0, d.outOfStock || 0];
 
+        var brandLabels = (d.branchStocks || []).map(function (b) { return b.branch_name; });
+        var brandStacks = {
+            inStock: (d.branchStocks || []).map(function (b) { return b.in_stock; }),
+            lowStock: (d.branchStocks || []).map(function (b) { return b.low_stock; }),
+            outOfStock: (d.branchStocks || []).map(function (b) { return b.out_of_stock; })
+        };
+        buildBranchStockTable(d.branchStocks || []);
+
         if (lineChart) {
-            updateCharts(lineLabels, lineData, pieData);
+            updateCharts(lineLabels, lineData, pieData, brandLabels, brandStacks);
         } else {
             initCharts(lineLabels, lineData, pieData);
         }

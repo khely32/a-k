@@ -171,6 +171,29 @@ class ReportController extends Controller
                 ->get();
         }
 
+        // ─── PER-BRANCH STOCK-STATUS BREAKDOWN (ALL BRANCHES, realtime) ───
+        $branchStocks = Branch::with('inventories')->orderBy('branch_name')->get()
+            ->map(function ($branch) {
+                $in = 0; $low = 0; $out = 0;
+                foreach ($branch->inventories as $inv) {
+                    if ($inv->quantity <= 0) {
+                        $out++;
+                    } elseif ($inv->quantity <= 5) {
+                        $low++;
+                    } else {
+                        $in++;
+                    }
+                }
+                return [
+                    'branch_id'     => $branch->id,
+                    'branch_name'   => $branch->isMainBranch() ? 'Main Branch' : $branch->branch_name,
+                    'in_stock'      => $in,
+                    'low_stock'     => $low,
+                    'out_of_stock'  => $out,
+                    'total'         => $in + $low + $out,
+                ];
+            })->values();
+
         return compact(
             'totalProducts',
             'totalInventory',
@@ -181,7 +204,8 @@ class ReportController extends Controller
             'topProducts',
             'inStock',
             'lowStock',
-            'outOfStock'
+            'outOfStock',
+            'branchStocks'
         );
     }
 
