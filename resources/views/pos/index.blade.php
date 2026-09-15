@@ -82,10 +82,6 @@
                         <span>Subtotal:</span>
                         <span id="subtotal">₱0.00</span>
                     </div>
-                    <div class="t-row">
-                        <span>Tax (12%):</span>
-                        <span id="tax-amount">₱0.00</span>
-                    </div>
                     <div class="t-row t-grand">
                         <span>GRAND TOTAL:</span>
                         <span id="cart-total">₱0.00</span>
@@ -565,7 +561,6 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    const TAX_RATE = 0.12;
     const $ = id => document.getElementById(id);
 
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -667,10 +662,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 $('cart-items').innerHTML = html;
 
-                const tax = subtotal * TAX_RATE;
                 $('subtotal').textContent = money(subtotal);
-                $('tax-amount').textContent = money(tax);
-                $('cart-total').textContent = money(subtotal + tax);
+                $('cart-total').textContent = money(subtotal);
             });
     }
 
