@@ -16,6 +16,10 @@ services:
         value: pgsql
       - key: DB_SSLMODE
         value: require # Neon requires TLS connections
+      # Neon free plan caps a project at 0.5 GB. /healthz reports usage against
+      # this so a full database is visible instead of showing up as a bare 500.
+      - key: DB_STORAGE_LIMIT_BYTES
+        value: "536870912"
       - key: DB_HOST
         sync: false # Neon DIRECT host (no "-pooler" suffix), e.g. ep-xxxx.region.aws.neon.tech - pooler breaks migration transactions
       - key: DB_PORT
@@ -32,5 +36,12 @@ services:
         value: database
       - key: SESSION_DRIVER
         value: database
+      # Send Laravel's log output to stderr so it lands in the Render log
+      # stream. Without this, exceptions only go to storage/logs/laravel.log
+      # inside the container and the Render dashboard shows nothing useful.
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: info
       - key: MIGRATE_AND_SEED
         value: "true"

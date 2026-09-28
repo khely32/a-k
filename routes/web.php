@@ -21,17 +21,14 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-/* Health probe — lets CI/OCR verify a deploy is live without auth
-   (Render free tier has no built-in healthcheck; this is ours). */
-Route::get('/healthz', function () {
-    return response()->json([
-        'status'   => 'ok',
-        'app'      => config('app.name'),
-        'env'      => app()->environment(),
-        'commit'   => trim(exec('git log --oneline -1 --format=%h') ?: 'unknown'),
-        'time'     => now()->toIso8601String(),
-    ]);
-});
+/*
+|--------------------------------------------------------------------------
+| Health probe
+|--------------------------------------------------------------------------
+| /healthz is registered in bootstrap/app.php, outside the "web" group, so
+| that it keeps answering when the database (and therefore every "web" route)
+| is broken. See HealthController.
+*/
 
 /*
 |--------------------------------------------------------------------------
@@ -163,7 +160,7 @@ Route::middleware(['auth'])->group(function () {
     | Branches
     |--------------------------------------------------------------------------
     */
-    Route::resource('branches', BranchController::class);
+    Route::resource('branches', BranchController::class)->except(['show']);
 
     /*
     |--------------------------------------------------------------------------
@@ -180,7 +177,7 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
     Route::post('/products/restock', [ProductController::class, 'restock'])->name('products.restock');
-    Route::resource('products', ProductController::class);
+    Route::resource('products', ProductController::class)->except(['show']);
     Route::get('/category-sizes/{category}', [ProductController::class, 'getSizes'])->name('category.sizes');
 
     /*
@@ -188,7 +185,7 @@ Route::middleware(['auth'])->group(function () {
     | Users
     |--------------------------------------------------------------------------
     */
-    Route::resource('users', \App\Http\Controllers\UserController::class);
+    Route::resource('users', \App\Http\Controllers\UserController::class)->except(['show']);
     Route::post('/users/{user}/reveal-password', [\App\Http\Controllers\UserController::class, 'revealPassword'])->name('users.revealPassword');
     Route::post('/users/{user}/reset-password', [\App\Http\Controllers\UserController::class, 'resetPassword'])->name('users.resetPassword');
     Route::post('/users/{user}/update-username', [\App\Http\Controllers\UserController::class, 'updateUsername'])->name('users.updateUsername');
