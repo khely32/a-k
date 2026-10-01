@@ -387,6 +387,53 @@
 .rpt-card .table tbody tr { transition: background 0.15s; }
 .rpt-card .table tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
 
+/* === Branch Stocks Table (dark theme match) === */
+.bs-table-wrap {
+    background: var(--r-card);
+    border: 1px solid var(--r-border);
+    border-radius: 14px;
+    overflow: hidden;
+}
+.bs-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+.bs-table thead th {
+    background: linear-gradient(90deg, var(--r-card), var(--r-card2));
+    color: var(--r-muted);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--r-border);
+    font-weight: 600;
+    text-align: left;
+}
+.bs-table thead th:first-child { padding-left: 20px; }
+.bs-table thead th:last-child { padding-right: 20px; }
+.bs-table thead th.text-center { text-align: center; }
+.bs-table thead th.text-end { text-align: right; }
+.bs-table tbody td {
+    padding: 12px 16px;
+    font-size: 0.78rem;
+    color: var(--r-text);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    vertical-align: middle;
+    background: transparent;
+}
+.bs-table tbody td:first-child { padding-left: 20px; }
+.bs-table tbody td:last-child { padding-right: 20px; }
+.bs-table tbody td.text-center { text-align: center; }
+.bs-table tbody td.text-end { text-align: right; }
+.bs-table tbody tr { transition: background 0.15s; }
+.bs-table tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
+.bs-table tbody tr:last-child td { border-bottom: none; }
+.bs-table .bs-branch-name {
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
 /* ════ BRANCH ANALYTICS ════ */
 .ba-section{margin-bottom:24px}
 .ba-restricted{
@@ -716,18 +763,20 @@
             </div>
             <div class="rpt-card-body">
                 <div class="rpt-chart" style="height:240px;"><canvas id="branchStockChart"></canvas></div>
-                <table class="table table-sm table-hover align-middle mt-3 mb-0" style="color:var(--r-text)">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Branch</th>
-                            <th class="text-center"><span class="d-inline-block" style="width:10px;height:10px;background:#00E676;border-radius:3px;display:inline-block;"></span> In Stock</th>
-                            <th class="text-center"><span style="width:10px;height:10px;background:#FFC107;border-radius:3px;display:inline-block;"></span> Low Stock</th>
-                            <th class="text-center"><span style="width:10px;height:10px;background:#FF2E55;border-radius:3px;display:inline-block;"></span> Out of Stock</th>
-                            <th class="text-center">Items</th>
-                        </tr>
-                    </thead>
-                    <tbody id="branchStockBody"></tbody>
-                </table>
+                <div class="bs-table-wrap mt-3">
+                    <table class="bs-table">
+                        <thead>
+                            <tr>
+                                <th>Branch</th>
+                                <th class="text-center"><span class="d-inline-block" style="width:10px;height:10px;background:#00E676;border-radius:3px;display:inline-block;"></span> In Stock</th>
+                                <th class="text-center"><span style="width:10px;height:10px;background:#FFC107;border-radius:3px;display:inline-block;"></span> Low Stock</th>
+                                <th class="text-center"><span style="width:10px;height:10px;background:#FF2E55;border-radius:3px;display:inline-block;"></span> Out of Stock</th>
+                                <th class="text-center">Items</th>
+                            </tr>
+                        </thead>
+                        <tbody id="branchStockBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -993,18 +1042,17 @@ document.addEventListener('DOMContentLoaded', function () {
     function buildBranchStockTable(branches) {
         var tbody = document.getElementById('branchStockBody');
         if (!branches || branches.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4" style="color:var(--r-muted)">No branch inventory data</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="padding:36px 16px;color:var(--r-muted);font-size:0.78rem">No branch inventory data</td></tr>';
             return;
         }
         tbody.innerHTML = branches.map(function (b) {
             var name = escapeHtml(b.branch_name || 'Unknown');
-            var badge = function (n, color) { return '<span class="badge rounded-pill" style="background:' + color + '1a;color:' + color + '">' + n + '</span>'; };
             return '<tr>' +
-                '<td class="px-3 py-2 fw-semibold">' + name + '</td>' +
-                '<td class="px-3 py-2 text-end" style="color:var(--r-green)">' + (b.in_stock || 0) + '</td>' +
-                '<td class="px-3 py-2 text-end" style="color:var(--r-yellow)">' + (b.low_stock || 0) + '</td>' +
-                '<td class="px-3 py-2 text-end" style="color:var(--r-red)">' + (b.out_of_stock || 0) + '</td>' +
-                '<td class="px-3 py-2 text-end fw-semibold" style="color:var(--r-green)">' +
+                '<td class="bs-branch-name">' + name + '</td>' +
+                '<td class="text-end" style="color:var(--r-green);font-weight:700">' + (b.in_stock || 0) + '</td>' +
+                '<td class="text-end" style="color:var(--r-yellow);font-weight:700">' + (b.low_stock || 0) + '</td>' +
+                '<td class="text-end" style="color:var(--r-accent);font-weight:700">' + (b.out_of_stock || 0) + '</td>' +
+                '<td class="text-end" style="color:var(--r-text);font-weight:700">' +
                     ((b.in_stock || 0) + (b.low_stock || 0) + (b.out_of_stock || 0)) +
                 '</td>' +
             '</tr>';
