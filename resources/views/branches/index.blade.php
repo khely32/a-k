@@ -89,7 +89,7 @@
                     </div>
                     <div class="col-4">
                         <div class="fw-bold" style="color:var(--green);font-size:1.3rem;">₱{{ $branch->revenue }}</div>
-                        <div style="color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.5px;">Revenue</div>
+                        <div style="color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.5px;">Revenue Today</div>
                     </div>
                     <div class="col-4">
                         <div class="fw-bold" style="color:var(--pink);font-size:1.3rem;">{{ $branch->users_count }}</div>
@@ -132,7 +132,7 @@
                         <th class="py-3">Location</th>
                         <th class="py-3 text-center">Products</th>
                         <th class="py-3 text-center">Staff</th>
-                        <th class="py-3 text-end">Revenue</th>
+                        <th class="py-3 text-end">Revenue Today</th>
                         <th class="py-3 text-center">Status</th>
                         <th class="py-3 text-center pe-4">Actions</th>
                     </tr>

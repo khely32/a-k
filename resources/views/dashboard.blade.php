@@ -157,13 +157,13 @@
     <div class="col-xl-3 col-md-6">
         <div class="kpi">
             <div class="kpi-top">
-                <span class="kpi-label">Total Revenue</span>
+                <span class="kpi-label">Total Revenue (Today)</span>
                 <div class="kpi-icon-wrap eye-toggle" onclick="toggleRevenue()" title="Toggle visibility">
                     <i class="bi bi-eye" id="eyeIcon" style="color:var(--green)"></i>
                 </div>
             </div>
-            <div class="kpi-val neon-val-green" style="color:var(--green)" id="kpi-revenue" data-raw="₱{{ number_format($stats['total_sales'], 2) }}">₱***.**</div>
-            <div class="kpi-sub"><span class="up"><i class="bi bi-arrow-up-short"></i>Live total</span> &mdash; Your branch revenue summary</div>
+            <div class="kpi-val neon-val-green" style="color:var(--green)" id="kpi-revenue" data-masked="true" data-raw="₱{{ number_format($stats['total_sales'], 2) }}">₱***.**</div>
+            <div class="kpi-sub"><span class="up"><i class="bi bi-arrow-up-short"></i>Live total</span> &mdash; Today's branch revenue, resets at midnight</div>
             <div class="kpi-chart"><canvas id="revKpiChart"></canvas></div>
         </div>
     </div>
@@ -360,9 +360,10 @@
 document.addEventListener('DOMContentLoaded', function(){
     var R='#FF2E55',G='#00E676',Y='#FFC107',P='#D500F9',C='#00E5FF',M='#FF007F';
 
-    /* Revenue KPI sparkline */
+    /* Revenue KPI sparkline — flat line at today's total, resets daily */
+    var revToday={{ (float) $stats['total_sales'] }};
     var rc=document.getElementById('revKpiChart');
-    if(rc) new Chart(rc.getContext('2d'),{type:'line',data:{labels:['M','T','W','T','F','S','S'],datasets:[{data:[0,0,0,0,0,0,{{ $stats['total_sales'] }}],borderColor:G,backgroundColor:'rgba(0,230,118,0.08)',fill:true,tension:.4,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
+    if(rc) new Chart(rc.getContext('2d'),{type:'line',data:{labels:['M','T','W','T','F','S','S'],datasets:[{data:Array(7).fill(revToday),borderColor:G,backgroundColor:'rgba(0,230,118,0.08)',fill:true,tension:.4,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
 
     /* Cyan KPI sparkline */
     var cc=document.getElementById('cyanKpiChart');
@@ -395,7 +396,10 @@ document.addEventListener('DOMContentLoaded', function(){
             });
             var revEl=document.getElementById('kpi-revenue');
             var nd=d.getElementById('kpi-revenue');
-            if(revEl&&nd) revEl.dataset.raw=nd.dataset.raw;
+            if(revEl&&nd){
+                revEl.dataset.raw=nd.dataset.raw;
+                if(revEl.dataset.masked!=='true') revEl.textContent=nd.dataset.raw;
+            }
         }).catch(function(){});
     },10000);
 });

@@ -519,13 +519,11 @@
             @endforeach
         </select>
     </div>
-    <div style="flex:1;max-width:180px">
-        <label>Start Date</label>
-        <input type="date" id="filter-start" value="{{ $startDate ?? '' }}" class="form-control">
-    </div>
-    <div style="flex:1;max-width:180px">
-        <label>End Date</label>
-        <input type="date" id="filter-end" value="{{ $endDate ?? '' }}" class="form-control">
+    <div style="flex:1;max-width:220px">
+        <label>Reporting Period</label>
+        <div class="form-control d-flex align-items-center" style="color:var(--r-muted);cursor:default">
+            <i class="bi bi-calendar-day" style="margin-right:6px"></i>{{ \Carbon\Carbon::now('Asia/Manila')->format('M d, Y') }} (Today)
+        </div>
     </div>
     <div class="rpt-auto"><span class="dot"></span> Auto-refreshing</div>
 </div>
@@ -579,9 +577,9 @@
     <div class="col-md-6">
         <div class="rpt-val-card">
             <div class="rpt-val-left">
-                <div class="rpt-val-label"><i class="bi bi-currency-dollar" style="margin-right:3px"></i> Total Revenue</div>
+                <div class="rpt-val-label"><i class="bi bi-currency-dollar" style="margin-right:3px"></i> Total Revenue (Today)</div>
                 <div class="rpt-val-num green" id="kpi-revenue">₱{{ number_format($totalRevenue, 2) }}</div>
-                <div class="rpt-val-sub">Live transaction summary</div>
+                <div class="rpt-val-sub">Resets to zero at midnight</div>
             </div>
             <div class="rpt-val-chart"><canvas id="revSparkline"></canvas></div>
         </div>
@@ -897,7 +895,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('kpi-invvalue').textContent = '₱' + Number(d.inventoryValue).toLocaleString('en', {minimumFractionDigits:2});
 
         if (revSpark) {
-            var arr = [0,0,0,0,0,0,d.totalRevenue];
+            var arr = new Array(7).fill(Number(d.totalRevenue));
             revSpark.data.datasets[0].data = arr;
             revSpark.update();
         }
@@ -929,13 +927,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function fetchData() {
         var branchId = document.getElementById('filter-branch').value;
-        var startDate = document.getElementById('filter-start').value;
-        var endDate = document.getElementById('filter-end').value;
 
         var params = new URLSearchParams();
         params.set('branch_id', branchId);
-        if (startDate) params.set('start_date', startDate);
-        if (endDate) params.set('end_date', endDate);
 
         fetch('{{ route("reports.data") }}?' + params.toString())
             .then(function (res) { return res.json(); })
@@ -944,8 +938,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.getElementById('filter-branch').addEventListener('change', fetchData);
-    document.getElementById('filter-start').addEventListener('change', fetchData);
-    document.getElementById('filter-end').addEventListener('change', fetchData);
 
     setInterval(fetchData, 5000);
 
@@ -1081,7 +1073,7 @@ document.addEventListener('DOMContentLoaded', function () {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Total Revenue',
+                    label: 'Revenue (Last 6 Months)',
                     data: revenues,
                     backgroundColor: colors.map(function(c){ return hexToRgba(c, 0.7); }),
                     borderColor: colors,

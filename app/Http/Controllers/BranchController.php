@@ -19,7 +19,7 @@ class BranchController extends Controller
         $branches = Branch::orderBy('branch_name', 'asc')->get()->map(function ($branch) {
             $branch->products_count = Product::where('branch_id', $branch->id)->count();
             $branch->users_count = User::where('branch_id', $branch->id)->count();
-            $branch->revenue = number_format(Sale::where('branch_id', $branch->id)->sum('total_amount'), 2);
+            $branch->revenue = number_format(Sale::where('branch_id', $branch->id)->today()->sum('total_amount'), 2);
             $branch->low_stock = Inventory::where('branch_id', $branch->id)->where('quantity', '>', 0)->where('quantity', '<=', 5)->count();
             $branch->out_of_stock = Inventory::where('branch_id', $branch->id)->where('quantity', 0)->count();
             $branch->total_stock = Inventory::where('branch_id', $branch->id)->sum('quantity');

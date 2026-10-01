@@ -24,10 +24,8 @@ class ReportController extends Controller
         $branches = Branch::orderBy('branch_name')->get();
 
         $branchId = $request->get('branch_id', 'all');
-        $startDate = $request->get('start_date');
-        $endDate = $request->get('end_date');
 
-        $data = $this->getReportData($branchId, $startDate, $endDate);
+        $data = $this->getReportData($branchId);
 
         $user = Auth::user();
         $userBranchId = (int) $user->branch_id;
@@ -37,8 +35,6 @@ class ReportController extends Controller
         return view('reports.index', array_merge($data, compact(
             'branches',
             'branchId',
-            'startDate',
-            'endDate',
             'userBranchId',
             'isMainBranch'
         )));
@@ -51,10 +47,8 @@ class ReportController extends Controller
         }
 
         $branchId = $request->get('branch_id', 'all');
-        $startDate = $request->get('start_date');
-        $endDate = $request->get('end_date');
 
-        $raw = $this->getReportData($branchId, $startDate, $endDate);
+        $raw = $this->getReportData($branchId);
 
         $raw['topProducts'] = $raw['topProducts']->map(function ($item) {
             $product = $item->product ?? null;
@@ -102,14 +96,7 @@ class ReportController extends Controller
 
             $pendingTransfers = StockTransfer::where('status', 'pending')->count();
 
-            $salesQuery = Sale::query();
-            if ($startDate) {
-                $salesQuery->where('created_at', '>=', Carbon::parse($startDate, 'Asia/Manila')->startOfDay());
-            }
-            if ($endDate) {
-                $salesQuery->where('created_at', '<=', Carbon::parse($endDate, 'Asia/Manila')->endOfDay());
-            }
-            $totalRevenue = $salesQuery->sum('total_amount');
+            $totalRevenue = Sale::today()->sum('total_amount');
 
             $inventoryValue = Inventory::join('products', 'inventories.product_id', '=', 'products.id')
                 ->selectRaw('SUM(inventories.quantity * products.price) as total')
@@ -151,14 +138,7 @@ class ReportController extends Controller
                       ->orWhere('to_branch_id', $branchId);
                 })->count();
 
-            $salesQuery = Sale::where('branch_id', $branchId);
-            if ($startDate) {
-                $salesQuery->where('created_at', '>=', Carbon::parse($startDate, 'Asia/Manila')->startOfDay());
-            }
-            if ($endDate) {
-                $salesQuery->where('created_at', '<=', Carbon::parse($endDate, 'Asia/Manila')->endOfDay());
-            }
-            $totalRevenue = $salesQuery->sum('total_amount');
+            $totalRevenue = Sale::where('branch_id', $branchId)->today()->sum('total_amount');
 
             $inventoryValue = (clone $invQuery)
                 ->join('products', 'inventories.product_id', '=', 'products.id')
@@ -241,7 +221,9 @@ class ReportController extends Controller
 
     public function transactionHistory(Request $request)
     {
-        $user = Auth::user();
+        if (Auth::user()->role !== 'owner') {
+            abort(403);
+        }
 
         $query = Sale::with([
             'branch',
@@ -249,9 +231,7 @@ class ReportController extends Controller
             'items.product'
         ]);
 
-        if ($user->role !== 'owner') {
-            $query->where('branch_id', $user->branch_id);
-        } elseif ($request->branch_id) {
+        if ($request->branch_id) {
             $query->where('branch_id', $request->branch_id);
         }
 
@@ -271,7 +251,9 @@ class ReportController extends Controller
 
     public function transactionData(Request $request)
     {
-        $user = Auth::user();
+        if (Auth::user()->role !== 'owner') {
+            abort(403);
+        }
 
         $query = Sale::with([
             'branch',
@@ -279,9 +261,7 @@ class ReportController extends Controller
             'items.product'
         ]);
 
-        if ($user->role !== 'owner') {
-            $query->where('branch_id', $user->branch_id);
-        } elseif ($request->branch_id) {
+        if ($request->branch_id) {
             $query->where('branch_id', $request->branch_id);
         }
 

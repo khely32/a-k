@@ -18,7 +18,7 @@ class DashboardController extends Controller
         $branchId = $user->branch_id;
 
         if (in_array($user->role, ['owner', 'admin'], true)) {
-            $totalSales = Sale::where('branch_id', $branchId)->sum('total_amount');
+            $totalSales = Sale::where('branch_id', $branchId)->today()->sum('total_amount');
             $totalProducts = Inventory::where('branch_id', $branchId)->distinct('product_id')->count('product_id');
             $totalInventory = Inventory::where('branch_id', $branchId)->sum('quantity');
             $lowStock = Inventory::where('branch_id', $branchId)
@@ -68,7 +68,7 @@ class DashboardController extends Controller
         }
 
         // Staff
-        $totalSales = Sale::where('branch_id', $branchId)->sum('total_amount');
+        $totalSales = Sale::where('branch_id', $branchId)->today()->sum('total_amount');
         $totalProducts = Inventory::where('branch_id', $branchId)->distinct('product_id')->count('product_id');
         $totalInventory = Inventory::where('branch_id', $branchId)->sum('quantity');
         $lowStock = Inventory::where('branch_id', $branchId)
