@@ -321,7 +321,7 @@
                     @foreach($branchSummary as $br)
                         <div class="col-xl-3 col-md-6">
                             <div class="br {{ $br->id == $user->branch_id ? 'active-br' : '' }}">
-                                <div class="br-name">{{ $br->id == 8 ? 'Main Branch' : $br->branch_name }}</div>
+                                <div class="br-name">{{ optional($br)->isMainBranch() ? 'Main Branch' : ($br->branch_name ?? '—') }}</div>
                                 <div class="br-stats">
                                     <div><div class="br-stat-val" style="color:var(--cyan)">{{ $br->product_count }}</div><div class="br-stat-lbl">Products</div></div>
                                     <div><div class="br-stat-val" style="color:var(--green)">{{ number_format($br->total_qty) }}</div><div class="br-stat-lbl">Inventory</div></div>

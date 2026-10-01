@@ -12,10 +12,12 @@ class Branch extends Model
         'branch_name',
         'location',
         'is_active',
+        'is_main',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_main' => 'boolean',
     ];
 
     public function getNameAttribute()
@@ -25,8 +27,17 @@ class Branch extends Model
 
     public function isMainBranch(): bool
     {
-        return str_contains(strtolower($this->branch_name ?? ''), 'moroboro')
-            || str_contains(strtolower($this->branch_name ?? ''), 'branch 1');
+        return (bool) $this->is_main;
+    }
+
+    public static function mainBranch(): ?self
+    {
+        return static::where('is_main', true)->first();
+    }
+
+    public function scopeMain($query)
+    {
+        return $query->where('is_main', true);
     }
 
     public function getAddressAttribute()

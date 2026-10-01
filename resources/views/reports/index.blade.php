@@ -608,7 +608,7 @@
             <option value="all" {{ $branchId === 'all' ? 'selected' : '' }} style="font-weight:700;color:var(--r-cyan)">Overall / All Branches</option>
             @foreach($branches as $branch)
                 <option value="{{ $branch->id }}" {{ $branchId == $branch->id ? 'selected' : '' }}>
-                    {{ $branch->id == 8 ? 'Main Branch' : $branch->branch_name }}
+                    {{ optional($branch)->isMainBranch() ? 'Main Branch' : ($branch->branch_name ?? '—') }}
                 </option>
             @endforeach
         </select>

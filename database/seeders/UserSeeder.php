@@ -19,7 +19,7 @@ class UserSeeder extends Seeder
 
         // One user per branch; the Moroboro branch account is the owner/admin
         foreach ($branches as $branch) {
-            $isMain = str_contains(strtolower($branch->branch_name), 'moroboro');
+            $isMain = $branch->isMainBranch();
             $slug = strtolower(str_replace(' ', '', preg_replace('/\s+Branch$/i', '', $branch->branch_name)));
             $email = $isMain ? 'admin' : "{$slug}@akmotorcycle.com";
             $plainPassword = $isMain ? 'admin123456789' : 'password';

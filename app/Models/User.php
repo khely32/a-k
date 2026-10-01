@@ -36,22 +36,22 @@ protected $fillable = [
 
     public function branchLabel(): string
     {
-        $branchName = $this->branch()->value('branch_name');
+        // Must call the relation explicitly: the legacy `branch` name-string
+        // column on users shadows a `$this->branch` property access.
+        $branch = $this->branch()->first();
 
-        if (!$branchName || str_contains(strtolower($branchName), 'moroboro')) {
+        if (!$branch || !$branch->branch_name) {
             return 'MAIN BRANCH';
         }
 
-        return strtoupper($branchName);
+        return $branch->isMainBranch() ? 'MAIN BRANCH' : strtoupper($branch->branch_name);
     }
 
     public function branchDisplayName(): string
     {
-        if (!empty($this->branch)) {
-            return $this->branch;
-        }
+        $branch = $this->branch()->first();
 
-        return (string) optional($this->branch()->first())->branch_name;
+        return (string) ($branch ? $branch->branch_name : '');
     }
 
     protected function casts(): array

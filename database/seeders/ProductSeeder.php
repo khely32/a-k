@@ -10,8 +10,7 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        $mainBranch = \App\Models\Branch::whereRaw('LOWER(branch_name) LIKE ?', ['%moroboro%'])->first();
-        $branchId = $mainBranch ? $mainBranch->id : null;
+        $branchId = \App\Models\Branch::mainBranch()?->id;
 
         $products = [
             ['serial_number' => 'HON-OIL-001', 'name' => '4T Engine Oil', 'brand' => 'Honda', 'type' => 'Lubricant', 'quantity' => 50, 'price' => 320.00],
