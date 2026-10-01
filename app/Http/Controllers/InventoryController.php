@@ -50,6 +50,37 @@ class InventoryController extends Controller
 
             $branchId = auth()->user()->branch_id ?? 1;
 
+            $existing = Product::findDuplicate([
+                'name'  => $validated['name'],
+                'brand' => $validated['brand'],
+                'type'  => $validated['type'],
+                'size'  => $validated['size'] ?? null,
+                'color' => $validated['color'] ?? null,
+            ]);
+
+            if ($existing) {
+                $quantity = (int) $validated['quantity'];
+
+                // firstOrCreate + increment matches the POS pattern and keeps the
+                // arithmetic in SQL with real parameter binding.
+                $inventory = Inventory::firstOrCreate(
+                    ['product_id' => $existing->id, 'branch_id' => $branchId],
+                    ['quantity' => 0]
+                );
+                $inventory->increment('quantity', $quantity);
+
+                // Keep the denormalised product total in step with the branch
+                // inventory, the way the normal create path and POS both do.
+                $existing->increment('quantity', $quantity);
+
+                DB::commit();
+
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->with('success', "Product already exists (Serial: {$existing->serial_number}) — no duplicate created. Stock was added to the existing product instead.");
+            }
+
             $product = Product::create([
                 'name'        => $validated['name'],
                 'brand'       => $validated['brand'],

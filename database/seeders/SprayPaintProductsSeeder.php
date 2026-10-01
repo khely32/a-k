@@ -11,7 +11,7 @@ class SprayPaintProductsSeeder extends Seeder
     protected $mainBranchId;
 
     protected $products = [
-        // ── Bosny Spray Paint ───────────────────────────────────────
+        // â”€â”€ Bosny Spray Paint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         ['name' => 'Bosny Flat Black Spray Paint',          'brand' => 'Bosny', 'type' => 'Spray Paint', 'color' => 'Flat Black',          'price' => 250.00],
         ['name' => 'Bosny Flat Clear Spray Paint',           'brand' => 'Bosny', 'type' => 'Spray Paint', 'color' => 'Flat Clear',           'price' => 250.00],
         ['name' => 'Bosny Clear Spray Paint',                'brand' => 'Bosny', 'type' => 'Spray Paint', 'color' => 'Clear',                'price' => 250.00],
@@ -28,7 +28,7 @@ class SprayPaintProductsSeeder extends Seeder
         ['name' => 'Bosny Metallic Silver Spray Paint',      'brand' => 'Bosny', 'type' => 'Spray Paint', 'color' => 'Metallic Silver',      'price' => 280.00],
         ['name' => 'Bosny Metallic Black Spray Paint',       'brand' => 'Bosny', 'type' => 'Spray Paint', 'color' => 'Metallic Black',       'price' => 280.00],
 
-        // ── Samurai Spray Paint ─────────────────────────────────────
+        // â”€â”€ Samurai Spray Paint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         ['name' => 'Samurai Flat Black Spray Paint',         'brand' => 'Samurai', 'type' => 'Spray Paint', 'color' => 'Flat Black',        'price' => 260.00],
         ['name' => 'Samurai Flat Clear Spray Paint',         'brand' => 'Samurai', 'type' => 'Spray Paint', 'color' => 'Flat Clear',        'price' => 260.00],
         ['name' => 'Samurai Clear Spray Paint',              'brand' => 'Samurai', 'type' => 'Spray Paint', 'color' => 'Clear',             'price' => 260.00],
@@ -48,7 +48,7 @@ class SprayPaintProductsSeeder extends Seeder
 
     public function run(): void
     {
-        $this->mainBranchId = \App\Models\Branch::whereRaw('LOWER(branch_name) LIKE ?', ['%moroboro%'])->value('id');
+        $this->mainBranchId = \App\Models\Branch::mainBranch()?->id;
         $created = [];
         $skipped = [];
 

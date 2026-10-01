@@ -11,13 +11,13 @@ class LubricantAccessoryProductsSeeder extends Seeder
     protected $mainBranchId;
 
     protected $products = [
-        // ── Lubricants ─────────────────────────────────────────────
+        // â”€â”€ Lubricants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         ['name' => 'Unioil Motosport 4T Scooter 10W-30 Engine Oil',   'brand' => 'Unioil',  'type' => 'Engine Oil',  'price' => 180.00],
         ['name' => 'Unioil SMO SAE 40 Motorcycle Engine Oil',          'brand' => 'Unioil',  'type' => 'Engine Oil',  'price' => 170.00],
         ['name' => 'RS8 100% Synthetic 10W-40 Motorcycle Engine Oil',  'brand' => 'RS8',     'type' => 'Engine Oil',  'price' => 350.00],
         ['name' => 'Suretite Black RTV Silicone Sealant',              'brand' => 'Suretite','type' => 'Accessories', 'price' => 150.00],
 
-        // ── Levers / Accessories ───────────────────────────────────
+        // â”€â”€ Levers / Accessories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         ['name' => 'Ahim Aerox Red CNC Brake Lever',                  'brand' => 'Ahim',    'type' => 'Lever',  'price' => 700.00],
         ['name' => 'GZL Click Orange Brake Lever',                    'brand' => 'GZL',     'type' => 'Lever',  'price' => 500.00],
         ['name' => 'Domino Gold Brake Lever',                         'brand' => 'Domino',  'type' => 'Lever',  'price' => 450.00],
@@ -26,7 +26,7 @@ class LubricantAccessoryProductsSeeder extends Seeder
 
     public function run(): void
     {
-        $this->mainBranchId = \App\Models\Branch::whereRaw('LOWER(branch_name) LIKE ?', ['%moroboro%'])->value('id');
+        $this->mainBranchId = \App\Models\Branch::mainBranch()?->id;
         $created = [];
         $skipped = [];
 

@@ -23,7 +23,7 @@ class KoyoBearingProductsSeeder extends Seeder
 
     public function run(): void
     {
-        $this->mainBranchId = \App\Models\Branch::whereRaw('LOWER(branch_name) LIKE ?', ['%moroboro%'])->value('id');
+        $this->mainBranchId = \App\Models\Branch::mainBranch()?->id;
         $created = [];
         $skipped = [];
 

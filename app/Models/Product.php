@@ -48,6 +48,26 @@ class Product extends Model
     }
 
     /**
+     * Find an existing product matching the same identity (name, brand, type,
+     * size, color) that is different from the given product id. Used to block
+     * duplicate products.
+     */
+    public static function findDuplicate(array $identity, ?int $ignoreId = null)
+    {
+        $query = static::whereRaw('LOWER(TRIM(name)) = LOWER(?)', [trim($identity['name'])])
+            ->whereRaw('LOWER(COALESCE(brand, \'\')) = LOWER(?)', [trim($identity['brand'] ?? '')])
+            ->whereRaw('LOWER(COALESCE(type, \'\')) = LOWER(?)', [trim($identity['type'] ?? '')])
+            ->whereRaw('LOWER(COALESCE(size, \'\')) = LOWER(?)', [trim($identity['size'] ?? '')])
+            ->whereRaw('LOWER(COALESCE(color, \'\')) = LOWER(?)', [trim($identity['color'] ?? '')]);
+
+        if ($ignoreId !== null) {
+            $query->where('id', '!=', $ignoreId);
+        }
+
+        return $query->first();
+    }
+
+    /**
      * SAFETY APIS (Accessors)
      * If any legacy front-end JavaScript/Blade views try to call the old variable names 
      * on this model, these functions dynamically hand back the correct new columns.

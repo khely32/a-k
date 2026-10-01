@@ -79,6 +79,32 @@ class ProductController extends Controller
 
         $branchId = auth()->user()->branch_id ?? 1;
 
+        $existing = Product::findDuplicate([
+            'name'  => $request->name,
+            'brand' => $request->brand,
+            'type'  => $request->type,
+            'size'  => $request->size,
+            'color' => $request->color,
+        ]);
+
+        if ($existing) {
+            $quantity = (int) $request->quantity;
+
+            // firstOrCreate + increment matches the POS pattern and keeps the
+            // arithmetic in SQL with real parameter binding.
+            $inventory = Inventory::firstOrCreate(
+                ['product_id' => $existing->id, 'branch_id' => $branchId],
+                ['quantity' => 0]
+            );
+            $inventory->increment('quantity', $quantity);
+
+            // Keep the denormalised product total in step with the branch
+            // inventory, the way the normal create path and POS both do.
+            $existing->increment('quantity', $quantity);
+
+            return back()->withInput()->with('success', "Product already exists (Serial: {$existing->serial_number}) — no duplicate created. Stock was added to the existing product instead.");
+        }
+
         $product = Product::create([
             'name'        => $request->name,
             'brand'       => $request->brand,
@@ -132,6 +158,20 @@ class ProductController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        $existing = Product::findDuplicate([
+            'name'  => $request->name,
+            'brand' => $request->brand,
+            'type'  => $request->type,
+            'size'  => $request->size,
+            'color' => $request->color,
+        ], $product->id);
+
+        if ($existing) {
+            return back()->withInput()->withErrors([
+                'name' => "This product already exists in the system (Serial: {$existing->serial_number}). Blocked to prevent duplicate products.",
+            ]);
+        }
+
         $product->update([
             'name'        => $request->name,
             'brand'       => $request->brand,
@@ -174,15 +214,14 @@ class ProductController extends Controller
 
         $branchId = auth()->user()->branch_id ?? 1;
 
-        Inventory::updateOrCreate(
+        $inventory = Inventory::firstOrCreate(
             [
                 'product_id' => $request->product_id,
                 'branch_id'  => $branchId,
             ],
-            [
-                'quantity' => \Illuminate\Support\Facades\DB::raw('COALESCE(quantity, 0) + ' . (int) $request->quantity),
-            ]
+            ['quantity' => 0]
         );
+        $inventory->increment('quantity', (int) $request->quantity);
 
         return redirect()->route('products.index')->with('success', 'Stock added successfully.');
     }

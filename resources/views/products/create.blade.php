@@ -25,6 +25,11 @@
 
 <div class="add-page">
         <div class="add-product-card">
+            @if(session('success'))
+            <div class="mx-4 mt-3 mb-0 p-3" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#A7F3D0;border-radius:12px;font-size:0.82rem;">
+                <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
+            </div>
+            @endif
             <div class="add-product-header">
                 <h1 class="add-product-title"><i class="bi bi-box-seam-fill me-2 add-product-icon"></i> Add New Product</h1>
                 <a href="{{ route('products.index') }}" class="btn btn-add-cancel btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>

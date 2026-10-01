@@ -33,6 +33,16 @@
 
         <form action="{{ route('inventory.store') }}" method="POST">
             @csrf
+            @if(session('error'))
+            <div class="mx-4 mt-3 mb-0 p-3" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#FECDD3;border-radius:12px;font-size:0.82rem;">
+                <i class="bi bi-exclamation-octagon-fill me-2"></i>{{ session('error') }}
+            </div>
+            @endif
+            @if(session('success'))
+            <div class="mx-4 mt-3 mb-0 p-3" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#A7F3D0;border-radius:12px;font-size:0.82rem;">
+                <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
+            </div>
+            @endif
             <div class="inv-add-body">
                 <div class="row g-4">
 

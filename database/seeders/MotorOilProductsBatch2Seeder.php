@@ -28,7 +28,7 @@ class MotorOilProductsBatch2Seeder extends Seeder
 
     public function run(): void
     {
-        $this->moroboroBranchId = \App\Models\Branch::whereRaw('LOWER(branch_name) LIKE ?', ['%moroboro%'])->value('id');
+        $this->moroboroBranchId = \App\Models\Branch::mainBranch()?->id;
         $created = [];
         $skipped = [];
 
@@ -63,7 +63,7 @@ class MotorOilProductsBatch2Seeder extends Seeder
         if ($this->command) {
             $this->command->info('Created ' . count($created) . ' product(s) at Moroboro Branch.');
             foreach ($skipped as $name) {
-                $this->command->warn('Already exists — skipped duplicate: ' . $name);
+                $this->command->warn('Already exists â€” skipped duplicate: ' . $name);
             }
         }
     }

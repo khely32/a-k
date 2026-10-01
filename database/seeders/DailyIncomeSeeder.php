@@ -21,8 +21,8 @@ class DailyIncomeSeeder extends Seeder
     protected const PAYMENT_METHODS = ['cash', 'cash', 'cash', 'gcash'];
 
     protected const SALES_PER_DAY = [
-        'moroboro' => [5, 10],
-        'default'  => [2, 5],
+        'main'    => [5, 10],
+        'default' => [2, 5],
     ];
 
     protected const LINES_PER_SALE = [1, 2];
@@ -87,7 +87,7 @@ class DailyIncomeSeeder extends Seeder
                 $isMain = $branch->isMainBranch();
 
                 [$min, $max] = $isMain
-                    ? self::SALES_PER_DAY['moroboro']
+                    ? self::SALES_PER_DAY['main']
                     : self::SALES_PER_DAY['default'];
 
                 // A branch whose own shelf is nearly empty cannot realistically
