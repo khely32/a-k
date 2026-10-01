@@ -66,7 +66,121 @@ class ReportController extends Controller
         return response()->json($raw);
     }
 
-    private function getReportData($branchId, $startDate = null, $endDate = null)
+    public function dailyIncome(Request $request)
+    {
+        if (Auth::user()->role !== 'owner') {
+            abort(403);
+        }
+
+        $days = (int) $request->get('days', 7);
+        if (! in_array($days, [7, 14, 30], true)) {
+            $days = 7;
+        }
+
+        $todayStart = Carbon::now('Asia/Manila')->startOfDay();
+        $rangeStart = $todayStart->copy()->subDays($days - 1);
+        $rangeEnd = $todayStart->copy()->addDay();
+
+        $sales = Sale::where('created_at', '>=', $rangeStart)
+            ->where('created_at', '<', $rangeEnd)
+            ->get(['branch_id', 'created_at', 'total_amount']);
+
+        $branchNames = Branch::orderBy('id')->pluck('branch_name', 'id');
+
+        $buckets = [];
+        for ($i = 0; $i < $days; $i++) {
+            $buckets[$rangeStart->copy()->addDays($i)->format('Y-m-d')] = [
+                'transactions' => 0,
+                'total'        => 0.0,
+                'branches'     => [],
+            ];
+        }
+
+        foreach ($sales as $sale) {
+            $key = Carbon::parse($sale->created_at)->format('Y-m-d');
+            if (! isset($buckets[$key])) {
+                continue;
+            }
+
+            $amount = (float) $sale->total_amount;
+            $branchId = $sale->branch_id === null ? 0 : (int) $sale->branch_id;
+
+            $buckets[$key]['transactions']++;
+            $buckets[$key]['total'] += $amount;
+
+            if (! isset($buckets[$key]['branches'][$branchId])) {
+                $buckets[$key]['branches'][$branchId] = [
+                    'transactions' => 0,
+                    'total'        => 0.0,
+                ];
+            }
+
+            $buckets[$key]['branches'][$branchId]['transactions']++;
+            $buckets[$key]['branches'][$branchId]['total'] += $amount;
+        }
+
+        $max = 0.0;
+        foreach ($buckets as $bucket) {
+            $max = max($max, $bucket['total']);
+        }
+
+        $todayKey = $todayStart->format('Y-m-d');
+        $yesterdayKey = $todayStart->copy()->subDay()->format('Y-m-d');
+
+        $list = [];
+        foreach (array_reverse($buckets, true) as $dateKey => $bucket) {
+            $date = Carbon::createFromFormat('Y-m-d', $dateKey, 'Asia/Manila');
+
+            if ($dateKey === $todayKey) {
+                $relative = 'Today';
+            } elseif ($dateKey === $yesterdayKey) {
+                $relative = 'Yesterday';
+            } else {
+                $relative = $date->format('l');
+            }
+
+            $dayTotal = $bucket['total'];
+
+            $breakdown = [];
+            foreach ($bucket['branches'] as $branchId => $figures) {
+                $breakdown[] = [
+                    'branch_id'     => $branchId === 0 ? null : $branchId,
+                    'branch_name'   => $branchId === 0
+                        ? 'Unassigned'
+                        : ($branchNames[$branchId] ?? "Branch #{$branchId}"),
+                    'transactions'  => $figures['transactions'],
+                    'total'         => round($figures['total'], 2),
+                    'share'         => $dayTotal > 0
+                        ? round(($figures['total'] / $dayTotal) * 100, 1)
+                        : 0.0,
+                ];
+            }
+
+            usort($breakdown, fn ($a, $b) => $b['total'] <=> $a['total']);
+
+            $list[] = [
+                'date'         => $date->format('M d, Y'),
+                'iso'          => $dateKey,
+                'relative'     => $relative,
+                'transactions' => $bucket['transactions'],
+                'total'        => round($dayTotal, 2),
+                'share'        => $max > 0 ? round(($dayTotal / $max) * 100, 1) : 0.0,
+                'is_today'     => $dateKey === $todayKey,
+                'branches'     => $breakdown,
+            ];
+        }
+
+        $periodTotal = array_sum(array_column($list, 'total'));
+
+        return response()->json([
+            'days'         => $days,
+            'period_total' => round($periodTotal, 2),
+            'max'          => round($max, 2),
+            'list'         => $list,
+        ]);
+    }
+
+    private function getReportData($branchId)
     {
         $isAll = ($branchId === 'all' || $branchId === null);
 

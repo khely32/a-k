@@ -457,6 +457,100 @@
 .ba-growth.neg{color:#EF4444}
 .ba-delta{font-weight:600;font-size:0.72rem;color:#94A3B8}
 
+/* Daily Income */
+.di-section{margin-bottom:24px}
+.di-header{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:16px;flex-wrap:wrap;gap:12px;
+}
+.di-header h4{
+    margin:0;font-size:0.95rem;font-weight:800;color:var(--r-text);
+    text-shadow:0 0 10px rgba(0,230,118,0.2);
+    display:flex;align-items:center;gap:8px;
+}
+.di-header h4 i{color:var(--r-green);font-size:1.1rem}
+.di-range{
+    display:flex;gap:4px;background:var(--r-card);border:1px solid var(--r-border);
+    border-radius:999px;padding:3px;
+}
+.di-range button{
+    background:none;border:none;cursor:pointer;
+    font-size:0.68rem;font-weight:700;color:var(--r-muted);
+    padding:5px 14px;border-radius:999px;transition:all 0.15s;
+}
+.di-range button:hover{color:var(--r-text)}
+.di-range button.active{background:rgba(0,230,118,0.15);color:var(--r-green);box-shadow:0 0 10px rgba(0,230,118,0.15)}
+.di-table-wrap{
+    background:var(--r-card);border:1px solid var(--r-border);
+    border-radius:14px;overflow:hidden;
+}
+.di-table{width:100%;border-collapse:collapse}
+.di-table thead th{
+    background:linear-gradient(90deg,var(--r-card),var(--r-card2));
+    color:var(--r-muted);font-size:0.62rem;text-transform:uppercase;
+    letter-spacing:0.06em;padding:12px 16px;border-bottom:1px solid var(--r-border);
+    font-weight:600;text-align:left;
+}
+.di-table thead th:first-child{padding-left:20px}
+.di-table thead th:last-child{padding-right:20px}
+.di-table tbody td{
+    padding:11px 16px;font-size:0.78rem;color:var(--r-text);
+    border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;
+}
+.di-table tbody td:first-child{padding-left:20px}
+.di-table tbody td:last-child{padding-right:20px}
+.di-table tbody tr:last-child td{border-bottom:none}
+.di-table tbody tr.is-today{background:rgba(0,230,118,0.06)}
+.di-table tbody tr.is-today td{border-bottom-color:rgba(0,230,118,0.12)}
+.di-tag{
+    display:inline-block;font-size:0.6rem;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.06em;
+    padding:2px 8px;border-radius:999px;margin-left:8px;
+    background:rgba(0,230,118,0.15);color:var(--r-green);
+    border:1px solid rgba(0,230,118,0.25);vertical-align:middle;
+}
+.di-txn{color:var(--r-muted);font-size:0.75rem}
+.di-bar-wrap{width:100%;min-width:90px;background:rgba(255,255,255,0.05);border-radius:999px;height:6px;overflow:hidden}
+.di-bar{height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(0,230,118,0.5),var(--r-green));transition:width 0.4s}
+.di-amount{font-weight:700;color:var(--r-green);white-space:nowrap}
+.di-amount.zero{color:var(--r-muted);font-weight:600}
+.di-total-row td{
+    background:rgba(0,230,118,0.05);font-weight:800;
+    border-top:1px solid rgba(0,230,118,0.18);
+}
+.di-total-row .di-amount{font-size:0.82rem}
+.di-empty{text-align:center;padding:36px 0;color:var(--r-muted);font-size:0.78rem}
+.di-toggle{
+    background:none;border:none;padding:0;margin-right:8px;cursor:pointer;
+    color:var(--r-muted);font-size:0.7rem;line-height:1;
+    display:inline-flex;align-items:center;justify-content:center;
+    width:16px;height:16px;border-radius:4px;transition:all 0.15s;vertical-align:middle;
+}
+.di-toggle:hover{color:var(--r-green);background:rgba(0,230,118,0.12)}
+.di-toggle:focus-visible{outline:2px solid var(--r-green);outline-offset:1px}
+.di-toggle i{display:block;transition:transform 0.18s ease}
+.di-row-open .di-toggle{color:var(--r-green)}
+.di-row-open .di-toggle i{transform:rotate(90deg)}
+.di-detail td{
+    padding:0!important;background:rgba(0,230,118,0.03);
+    border-bottom:1px solid rgba(0,230,118,0.1)!important;
+}
+.di-detail-inner{padding:12px 20px 14px 44px}
+.di-detail-line{
+    display:flex;align-items:center;gap:10px;
+    padding:5px 0;font-size:0.75rem;color:var(--r-text);
+}
+.di-detail-line + .di-detail-line{border-top:1px solid rgba(255,255,255,0.03)}
+.di-detail-name{min-width:170px;display:flex;align-items:center;gap:8px}
+.di-detail-bar{flex:1;min-width:60px;height:5px;background:rgba(255,255,255,0.05);border-radius:999px;overflow:hidden}
+.di-detail-bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(0,230,118,0.4),var(--r-green))}
+.di-detail-amt{font-weight:700;color:var(--r-green);white-space:nowrap;min-width:96px;text-align:right}
+.di-detail-pct{color:var(--r-muted);font-size:0.7rem;white-space:nowrap;min-width:48px;text-align:right}
+@media (max-width:768px){
+    .di-detail-line{flex-wrap:wrap}
+    .di-detail-name{min-width:100%}
+}
+
 /* Chart Grid */
 .ba-charts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .ba-chart-card{
@@ -491,7 +585,7 @@
     .rpt-card .table td{color:#000!important;border-color:#ccc!important}
     .rpt-kpi-val,.rpt-val-num{color:#000!important}
     .rpt-kpi-label,.rpt-val-label{color:#555!important}
-    .ba-section{display:none!important}
+    .ba-section,.di-section{display:none!important}
 }
 </style>
 
@@ -637,6 +731,44 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- ═══ Daily Income Section ═══ -->
+<div class="di-section" id="di-section">
+    @if($isMainBranch)
+        <div class="di-header no-print">
+            <h4><i class="bi bi-calendar-week"></i> Daily Income — All Branches</h4>
+            <div class="di-range" id="di-range">
+                <button type="button" data-days="7" class="active">7 Days</button>
+                <button type="button" data-days="14">14 Days</button>
+                <button type="button" data-days="30">30 Days</button>
+            </div>
+        </div>
+
+        <div class="di-table-wrap">
+            <table class="di-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th class="text-end">Transactions</th>
+                        <th style="width:34%">Share of Best Day</th>
+                        <th class="text-end">Total Income</th>
+                    </tr>
+                </thead>
+                <tbody id="di-body">
+                    <tr><td colspan="4" class="di-empty">Loading daily income...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="ba-restricted">
+            <div class="ba-restricted-icon"><i class="bi bi-shield-lock"></i></div>
+            <div>
+                <h6>All-branch daily income is restricted to Main Branch management.</h6>
+                <p>Contact the Main Branch administrator for consolidated daily income.</p>
+            </div>
+        </div>
+    @endif
 </div>
 
 <!-- ═══ Branch Analytics Section ═══ -->
@@ -886,6 +1018,111 @@ document.addEventListener('DOMContentLoaded', function () {
         return div.innerHTML;
     }
 
+    /* ═══ Daily Income ═══ */
+    var diDays = 7;
+    var diExpanded = null;
+
+    function fetchDailyIncome() {
+        var body = document.getElementById('di-body');
+        if (!body) return;
+
+        fetch('{{ route("reports.daily-income") }}?days=' + diDays)
+            .then(function (r) { return r.json(); })
+            .then(function (d) { renderDailyIncome(d); })
+            .catch(function (e) {
+                body.innerHTML = '<tr><td colspan="4" class="di-empty">Could not load daily income</td></tr>';
+                console.error('Daily income error:', e);
+            });
+    }
+
+    function renderDailyIncome(d) {
+        var body = document.getElementById('di-body');
+        if (!body) return;
+
+        var list = d.list || [];
+        if (list.length === 0) {
+            diExpanded = null;
+            body.innerHTML = '<tr><td colspan="4" class="di-empty">No income recorded in this period</td></tr>';
+            return;
+        }
+
+        var inRange = list.some(function (r) { return r.iso === diExpanded; });
+        if (!inRange) diExpanded = null;
+
+        var rows = list.map(function (r) {
+            var isZero = Number(r.total) === 0;
+            var tag = r.is_today ? '<span class="di-tag">Live</span>' : '';
+            var open = r.iso === diExpanded;
+            var branches = r.branches || [];
+
+            var main = '<tr' + (r.is_today ? ' class="is-today' : '') + (open ? ' di-row-open' : '') + '">' +
+                '<td>' +
+                    '<button type="button" class="di-toggle" data-iso="' + r.iso + '"' +
+                        ' aria-expanded="' + (open ? 'true' : 'false') + '"' +
+                        ' aria-label="Show branch breakdown for ' + escapeHtml(r.date) + '"' +
+                        (branches.length ? '' : ' disabled style="opacity:0.25;cursor:default"') + '>' +
+                        '<i class="bi bi-chevron-right"></i>' +
+                    '</button>' +
+                    escapeHtml(r.date) +
+                    ' <span style="color:var(--r-muted);font-size:0.7rem">' + escapeHtml(r.relative) + '</span>' + tag +
+                '</td>' +
+                '<td class="text-end di-txn">' + r.transactions + '</td>' +
+                '<td><div class="di-bar-wrap"><div class="di-bar" style="width:' + Number(r.share) + '%"></div></div></td>' +
+                '<td class="text-end di-amount' + (isZero ? ' zero' : '') + '">&#8369;' + formatNum(r.total) + '</td>' +
+            '</tr>';
+
+            if (!open) return main;
+
+            var lines = branches.map(function (b) {
+                return '<div class="di-detail-line">' +
+                    '<span class="di-detail-name"><span class="ba-branch-dot" style="background:' + (b.branch_id ? '#10B981' : '#F59E0B') + '"></span>' + escapeHtml(b.branch_name) + '</span>' +
+                    '<span class="di-detail-bar"><span style="width:' + Number(b.share) + '%"></span></span>' +
+                    '<span class="di-detail-pct">' + Number(b.share).toFixed(1) + '% &middot; ' + b.transactions + ' txn</span>' +
+                    '<span class="di-detail-amt">&#8369;' + formatNum(b.total) + '</span>' +
+                '</div>';
+            }).join('');
+
+            return main + '<tr class="di-detail"><td colspan="4"><div class="di-detail-inner">' + lines + '</div></td></tr>';
+        }).join('');
+
+        rows += '<tr class="di-total-row">' +
+            '<td>Period Total (' + d.days + ' days)</td>' +
+            '<td class="text-end di-txn">' + list.reduce(function (a, r) { return a + Number(r.transactions); }, 0) + '</td>' +
+            '<td></td>' +
+            '<td class="text-end di-amount">&#8369;' + formatNum(d.period_total) + '</td>' +
+        '</tr>';
+
+        body.innerHTML = rows;
+    }
+
+    function initDailyIncome() {
+        var wrap = document.getElementById('di-range');
+        if (wrap) {
+            wrap.addEventListener('click', function (e) {
+                var btn = e.target.closest('button[data-days]');
+                if (!btn) return;
+                diDays = parseInt(btn.getAttribute('data-days'), 10);
+                Array.prototype.forEach.call(wrap.querySelectorAll('button'), function (b) {
+                    b.classList.toggle('active', b === btn);
+                });
+                fetchDailyIncome();
+            });
+        }
+
+        var body = document.getElementById('di-body');
+        if (body) {
+            body.addEventListener('click', function (e) {
+                var btn = e.target.closest('.di-toggle');
+                if (!btn || btn.disabled) return;
+                var iso = btn.getAttribute('data-iso');
+                diExpanded = diExpanded === iso ? null : iso;
+                fetchDailyIncome();
+            });
+        }
+
+        fetchDailyIncome();
+    }
+
     function applyData(d) {
         document.getElementById('kpi-products').textContent = d.totalProducts;
         document.getElementById('kpi-inventory').textContent = d.totalInventory;
@@ -1129,6 +1366,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
         return n.toFixed(0);
     }
+
+    initDailyIncome();
+    setInterval(fetchDailyIncome, 5000);
 
     fetchBranchAnalytics();
     setInterval(fetchBranchAnalytics, 15000);

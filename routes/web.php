@@ -151,6 +151,7 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/data', [ReportController::class, 'reportData'])->name('reports.data');
+    Route::get('/reports/daily-income', [ReportController::class, 'dailyIncome'])->name('reports.daily-income');
     Route::get('/reports/branch-analytics', [ReportController::class, 'branchAnalytics'])->name('reports.branch-analytics');
     Route::get('/reports/transaction-history', [ReportController::class, 'transactionHistory'])->name('reports.transaction-history');
     Route::get('/reports/transaction-data', [ReportController::class, 'transactionData'])->name('reports.transaction-data');
