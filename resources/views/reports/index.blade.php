@@ -516,6 +516,57 @@
     display:flex;align-items:center;gap:8px;
 }
 .di-header h4 i{color:var(--r-green);font-size:1.1rem}
+.di-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.di-filter{
+    display:inline-flex;align-items:center;gap:8px;position:relative;
+    background:var(--r-card);border:1px solid var(--r-border);
+    border-radius:999px;padding:0 12px;height:32px;
+    color:var(--r-muted);font-size:0.7rem;
+}
+.di-filter>i:first-child{color:var(--r-cyan);font-size:0.78rem}
+.di-filter .di-caret{font-size:0.6rem;color:var(--r-muted);pointer-events:none}
+.di-filter select{
+    appearance:none;-webkit-appearance:none;
+    background:none;border:none;outline:none;cursor:pointer;
+    color:var(--r-text);font-size:0.72rem;font-weight:700;
+    padding:0 4px;max-width:190px;
+}
+.di-filter select option{background:var(--r-card);color:var(--r-text);font-weight:600}
+.di-filter:focus-within{border-color:rgba(0,229,255,0.45);box-shadow:0 0 0 3px rgba(0,229,255,0.1)}
+.di-filter:hover{border-color:rgba(255,255,255,0.14)}
+.di-live{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:linear-gradient(90deg,rgba(0,230,118,0.08),rgba(0,229,255,0.05));
+    border:1px solid rgba(0,230,118,0.16);border-radius:12px;
+    padding:10px 16px;margin-bottom:12px;
+}
+.di-live-item{display:flex;flex-direction:column;gap:2px;min-width:130px}
+.di-live-label{
+    font-size:0.58rem;font-weight:700;text-transform:uppercase;
+    letter-spacing:0.06em;color:#94A3B8;
+    display:flex;align-items:center;gap:5px;
+}
+.di-live-label i{color:var(--r-green)}
+.di-live-val{font-size:0.9rem;font-weight:800;color:var(--r-green);white-space:nowrap}
+.di-live-val.di-txn{color:var(--r-text);font-weight:700}
+.di-live-stamp{
+    margin-left:auto;display:flex;align-items:center;gap:7px;
+    font-size:0.62rem;color:#94A3B8;white-space:nowrap;
+}
+.di-live-dot{
+    width:7px;height:7px;border-radius:50%;background:var(--r-green);
+    box-shadow:0 0 0 0 rgba(0,230,118,0.6);animation:di-pulse 1.8s infinite;
+}
+@keyframes di-pulse{
+    0%{box-shadow:0 0 0 0 rgba(0,230,118,0.55)}
+    70%{box-shadow:0 0 0 7px rgba(0,230,118,0)}
+    100%{box-shadow:0 0 0 0 rgba(0,230,118,0)}
+}
+@media (max-width:768px){
+    .di-live-stamp{margin-left:0}
+    .di-live-item{min-width:100%}
+    .di-filter select{max-width:130px}
+}
 .di-range{
     display:flex;gap:4px;background:var(--r-card);border:1px solid var(--r-border);
     border-radius:999px;padding:3px;
@@ -786,11 +837,42 @@
 <div class="di-section" id="di-section">
     @if($isMainBranch)
         <div class="di-header no-print">
-            <h4><i class="bi bi-calendar-week"></i> Daily Income — All Branches</h4>
-            <div class="di-range" id="di-range">
-                <button type="button" data-days="7" class="active">7 Days</button>
-                <button type="button" data-days="14">14 Days</button>
-                <button type="button" data-days="30">30 Days</button>
+            <h4><i class="bi bi-calendar-week"></i> Daily Income &mdash; <span id="di-scope">All Branches</span></h4>
+            <div class="di-controls">
+                <label class="di-filter" for="di-branch">
+                    <i class="bi bi-shop-window"></i>
+                    <select id="di-branch" aria-label="Filter daily income by branch">
+                        <option value="all">All Branches</option>
+                        @foreach($branches as $diBranch)
+                            <option value="{{ $diBranch->id }}">{{ $diBranch->branch_name }}</option>
+                        @endforeach
+                    </select>
+                    <i class="bi bi-chevron-down di-caret"></i>
+                </label>
+                <div class="di-range" id="di-range">
+                    <button type="button" data-days="7" class="active">7 Days</button>
+                    <button type="button" data-days="14">14 Days</button>
+                    <button type="button" data-days="30">30 Days</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="di-live" id="di-live">
+            <div class="di-live-item">
+                <span class="di-live-label"><i class="bi bi-broadcast"></i> Today</span>
+                <span class="di-live-val" id="di-live-today">&#8369;0.00</span>
+            </div>
+            <div class="di-live-item">
+                <span class="di-live-label">Today Transactions</span>
+                <span class="di-live-val di-txn" id="di-live-today-txn">0</span>
+            </div>
+            <div class="di-live-item">
+                <span class="di-live-label" id="di-live-period-label">Period Total (7 Days)</span>
+                <span class="di-live-val" id="di-live-period">&#8369;0.00</span>
+            </div>
+            <div class="di-live-stamp no-print">
+                <span class="di-live-dot"></span>
+                <span id="di-live-updated">&mdash;</span>
             </div>
         </div>
 
@@ -1068,13 +1150,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ═══ Daily Income ═══ */
     var diDays = 7;
+    var diBranch = 'all';
     var diExpanded = null;
 
     function fetchDailyIncome() {
         var body = document.getElementById('di-body');
         if (!body) return;
 
-        fetch('{{ route("reports.daily-income") }}?days=' + diDays)
+        fetch('{{ route("reports.daily-income") }}?days=' + diDays + '&branch=' + encodeURIComponent(diBranch))
             .then(function (r) { return r.json(); })
             .then(function (d) { renderDailyIncome(d); })
             .catch(function (e) {
@@ -1083,14 +1166,45 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
+    function setDiText(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = value;
+    }
+
+    function renderDailyIncomeLive(d) {
+        var today = d.today || {};
+        var scope = d.branch_label || 'All Branches';
+
+        setDiText('di-scope', scope);
+        setDiText('di-live-today', '₱' + formatNum(today.total || 0));
+        setDiText('di-live-today-txn', today.transactions || 0);
+        setDiText('di-live-period', '₱' + formatNum(d.period_total || 0));
+        setDiText('di-live-period-label', 'Period Total (' + d.days + ' Days · ' + scope + ')');
+
+        var stamp = new Date();
+        setDiText('di-live-updated', 'Updated ' + stamp.toLocaleTimeString('en', {
+            hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+        }));
+
+        // Keep the filter and the data in sync if the request was normalised.
+        if (d.branch === null) diBranch = 'all';
+        else diBranch = String(d.branch);
+
+        var sel = document.getElementById('di-branch');
+        if (sel && sel.value !== diBranch) sel.value = diBranch;
+    }
+
     function renderDailyIncome(d) {
         var body = document.getElementById('di-body');
         if (!body) return;
 
+        renderDailyIncomeLive(d);
+
         var list = d.list || [];
         if (list.length === 0) {
             diExpanded = null;
-            body.innerHTML = '<tr><td colspan="4" class="di-empty">No income recorded in this period</td></tr>';
+            body.innerHTML = '<tr><td colspan="4" class="di-empty">No income recorded for ' +
+                escapeHtml(d.branch_label || 'All Branches') + ' in this period</td></tr>';
             return;
         }
 
@@ -1134,8 +1248,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }).join('');
 
         rows += '<tr class="di-total-row">' +
-            '<td>Period Total (' + d.days + ' days)</td>' +
-            '<td class="text-end di-txn">' + list.reduce(function (a, r) { return a + Number(r.transactions); }, 0) + '</td>' +
+            '<td>Period Total (' + d.days + ' days &middot; ' + escapeHtml(d.branch_label || 'All Branches') + ')</td>' +
+            '<td class="text-end di-txn">' + (d.period_txn != null ? d.period_txn : list.reduce(function (a, r) { return a + Number(r.transactions); }, 0)) + '</td>' +
             '<td></td>' +
             '<td class="text-end di-amount">&#8369;' + formatNum(d.period_total) + '</td>' +
         '</tr>';
@@ -1153,6 +1267,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 Array.prototype.forEach.call(wrap.querySelectorAll('button'), function (b) {
                     b.classList.toggle('active', b === btn);
                 });
+                fetchDailyIncome();
+            });
+        }
+
+        var sel = document.getElementById('di-branch');
+        if (sel) {
+            diBranch = sel.value || 'all';
+            sel.addEventListener('change', function () {
+                diBranch = sel.value || 'all';
+                diExpanded = null;
                 fetchDailyIncome();
             });
         }

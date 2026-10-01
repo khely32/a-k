@@ -77,15 +77,29 @@ class ReportController extends Controller
             $days = 7;
         }
 
+        $branchNames = Branch::orderBy('id')->pluck('branch_name', 'id');
+
+        $branchParam = $request->get('branch', 'all');
+        $filterBranchId = null;
+        if ($branchParam !== 'all' && $branchParam !== null && $branchParam !== '') {
+            $requested = (int) $branchParam;
+            if ($requested > 0 && $branchNames->has($requested)) {
+                $filterBranchId = $requested;
+            }
+        }
+
         $todayStart = Carbon::now('Asia/Manila')->startOfDay();
         $rangeStart = $todayStart->copy()->subDays($days - 1);
         $rangeEnd = $todayStart->copy()->addDay();
 
-        $sales = Sale::where('created_at', '>=', $rangeStart)
-            ->where('created_at', '<', $rangeEnd)
-            ->get(['branch_id', 'created_at', 'total_amount']);
+        $query = Sale::where('created_at', '>=', $rangeStart)
+            ->where('created_at', '<', $rangeEnd);
 
-        $branchNames = Branch::orderBy('id')->pluck('branch_name', 'id');
+        if ($filterBranchId !== null) {
+            $query->where('branch_id', $filterBranchId);
+        }
+
+        $sales = $query->get(['branch_id', 'created_at', 'total_amount']);
 
         $buckets = [];
         for ($i = 0; $i < $days; $i++) {
@@ -166,16 +180,30 @@ class ReportController extends Controller
                 'total'        => round($dayTotal, 2),
                 'share'        => $max > 0 ? round(($dayTotal / $max) * 100, 1) : 0.0,
                 'is_today'     => $dateKey === $todayKey,
-                'branches'     => $breakdown,
+                // A single-branch filter already scopes the row, so the
+                // per-branch expansion would only repeat that one branch.
+                'branches'     => $filterBranchId === null ? $breakdown : [],
             ];
         }
 
         $periodTotal = array_sum(array_column($list, 'total'));
 
+        $todayBucket = $buckets[$todayKey] ?? ['transactions' => 0, 'total' => 0.0];
+        $periodTransactions = array_sum(array_column($list, 'transactions'));
+
         return response()->json([
             'days'         => $days,
             'period_total' => round($periodTotal, 2),
+            'period_txn'   => $periodTransactions,
             'max'          => round($max, 2),
+            'branch'       => $filterBranchId,
+            'branch_label' => $filterBranchId === null
+                ? 'All Branches'
+                : ($branchNames[$filterBranchId] ?? "Branch #{$filterBranchId}"),
+            'today'        => [
+                'transactions' => $todayBucket['transactions'],
+                'total'        => round($todayBucket['total'], 2),
+            ],
             'list'         => $list,
         ]);
     }
