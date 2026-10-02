@@ -363,9 +363,7 @@ class ReportController extends Controller
 
     public function transactionHistory(Request $request)
     {
-        if (Auth::user()->role !== 'owner') {
-            abort(403);
-        }
+        $user = Auth::user();
 
         $query = Sale::with([
             'branch',
@@ -373,7 +371,9 @@ class ReportController extends Controller
             'items.product'
         ]);
 
-        if ($request->branch_id) {
+        if (!in_array($user->role, ['owner', 'admin'])) {
+            $query->where('branch_id', $user->branch_id);
+        } elseif ($request->branch_id) {
             $query->where('branch_id', $request->branch_id);
         }
 
@@ -386,16 +386,14 @@ class ReportController extends Controller
         }
 
         $sales = $query->latest()->get();
-        $branches = Branch::all();
+        $branches = in_array($user->role, ['owner', 'admin']) ? Branch::all() : collect();
 
         return view('reports.transaction_history', compact('sales', 'branches'));
     }
 
     public function transactionData(Request $request)
     {
-        if (Auth::user()->role !== 'owner') {
-            abort(403);
-        }
+        $user = Auth::user();
 
         $query = Sale::with([
             'branch',
@@ -403,7 +401,9 @@ class ReportController extends Controller
             'items.product'
         ]);
 
-        if ($request->branch_id) {
+        if (!in_array($user->role, ['owner', 'admin'])) {
+            $query->where('branch_id', $user->branch_id);
+        } elseif ($request->branch_id) {
             $query->where('branch_id', $request->branch_id);
         }
 

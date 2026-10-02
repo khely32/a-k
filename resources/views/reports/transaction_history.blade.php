@@ -87,10 +87,10 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <!-- Filters (branch selector is owner-only; staff see only their branch's data) -->
+    <!-- Filters (branch selector is owner/admin only; staff see only their branch's data) -->
     <div class="tx-card mb-4 p-3">
         <div class="row g-3 align-items-end">
-            @if(Auth::user()->role === 'owner')
+            @if(in_array(Auth::user()->role, ['owner', 'admin']))
             <div class="col-md-3">
                 <label class="form-label text-muted small">Branch</label>
                 <select id="branch-filter" name="branch_id" class="form-select filter-input">
