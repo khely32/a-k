@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Product;
 use App\Models\Inventory;
+use App\Support\ProductCategory;
 
 class InventoryController extends Controller
 {
@@ -23,7 +24,12 @@ class InventoryController extends Controller
             ->orderBy('products.id', 'asc')
             ->get();
 
-        return view('inventory.index', compact('user', 'products'));
+        // Fixed taxonomy instead of distinct `type`: `type` doubles as a
+        // variant/size code, so it produced the same redundant entries the
+        // POS dropdown used to show.
+        $categories = ProductCategory::ALL;
+
+        return view('inventory.index', compact('user', 'products', 'categories'));
     }
 
     public function create()

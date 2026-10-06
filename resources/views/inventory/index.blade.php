@@ -316,8 +316,8 @@
         </div>
         <select id="category-filter" class="inv-select">
             <option value="">All Categories</option>
-            @foreach($products->pluck('type')->unique()->filter()->sort()->values() as $type)
-                <option value="{{ $type }}">{{ $type }}</option>
+            @foreach($categories as $category)
+                <option value="{{ $category }}">{{ $category }}</option>
             @endforeach
         </select>
         <select id="brand-filter" class="inv-select">
@@ -352,6 +352,7 @@
                         data-name="{{ strtolower($product->name) }}"
                         data-serial="{{ strtolower($product->serial_number) }}"
                         data-type="{{ strtolower($product->type ?? '') }}"
+                        data-category="{{ strtolower($product->category ?? '') }}"
                         data-brand="{{ $product->brand ?? '' }}"
                         data-color="{{ $product->color ?? '' }}">
 
@@ -528,7 +529,7 @@
             const category = (categorySelect.value || '').toLowerCase().trim();
             const brands = optionList(rows
                 .filter(function (r) {
-                    const t = (r.dataset.type || '').toLowerCase().trim();
+                    const t = (r.dataset.category || '').toLowerCase().trim();
                     return category === '' || t === category;
                 })
                 .map(function (r) {
@@ -551,7 +552,7 @@
             const brand = (brandSelect.value || '').toLowerCase().trim();
             const colors = optionList(rows
                 .filter(function (r) {
-                    const t = (r.dataset.type || '').toLowerCase().trim();
+                    const t = (r.dataset.category || '').toLowerCase().trim();
                     const b = (r.dataset.brand || '').toLowerCase().trim();
                     const c = (r.dataset.color || '').toLowerCase().trim();
                     if (!c) return false;
@@ -581,12 +582,12 @@
             rows.forEach(function (row) {
                 const name = row.dataset.name || '';
                 const serial = row.dataset.serial || '';
-                const type = (row.dataset.type || '').toLowerCase().trim();
+                const category_ = (row.dataset.category || '').toLowerCase().trim();
                 const rowBrand = (row.dataset.brand || '').toLowerCase().trim();
                 const rowColor = (row.dataset.color || '').toLowerCase().trim();
 
                 const matchesQuery = query === '' || name.indexOf(query) !== -1 || serial.indexOf(query) !== -1;
-                const matchesCategory = category === '' || type === category;
+                const matchesCategory = category === '' || category_ === category;
                 const matchesBrand = brand === '' || rowBrand === brand;
                 const matchesColor = color === '' || rowColor === color;
 
