@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Inventory;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Support\ProductCategory;
 use Illuminate\Support\Facades\DB;
 
 class PosController extends Controller
@@ -31,7 +32,8 @@ class PosController extends Controller
                 'products.price',
                 'inventories.quantity as stock_level',
                 'products.brand',
-                'products.type'
+                'products.type',
+                'products.category'
             ])
             ->join('inventories', function ($join) use ($branchId) {
                 $join->on('products.id', '=', 'inventories.product_id')
@@ -39,16 +41,31 @@ class PosController extends Controller
                      ->where('inventories.quantity', '>', 0);
             });
 
+        // Normalised comparison so "bearings", " Bearings " and "BEARINGS"
+        // all select the same rows. `category` is always a canonical value
+        // (see ProductCategory); `type` is still matched as a legacy alias so
+        // rows written before the backfill migration are not dropped.
         if ($category !== '' && strtolower($category) !== 'all') {
-            $query->where('products.type', $category);
+            $normalised = mb_strtolower($category);
+
+            $query->where(function ($q) use ($normalised) {
+                $q->whereRaw('LOWER(TRIM(products.category)) = ?', [$normalised])
+                  ->orWhereRaw('LOWER(TRIM(products.type)) = ?', [$normalised]);
+            });
         }
 
+        // Category and text search combine: pick Bearings, type 6201, and you
+        // get bearings whose name/SKU/brand/description contain "6201".
         if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('products.serial_number', 'LIKE', "%{$search}%")
-                  ->orWhere('products.name', 'LIKE', "%{$search}%")
-                  ->orWhere('products.brand', 'LIKE', "%{$search}%")
-                  ->orWhere('products.type', 'LIKE', "%{$search}%");
+            $needle = '%' . mb_strtolower($search) . '%';
+
+            $query->where(function ($q) use ($needle) {
+                $q->whereRaw('LOWER(TRIM(products.serial_number)) LIKE ?', [$needle])
+                  ->orWhereRaw('LOWER(TRIM(products.name)) LIKE ?', [$needle])
+                  ->orWhereRaw('LOWER(TRIM(COALESCE(products.brand, \'\'))) LIKE ?', [$needle])
+                  ->orWhereRaw('LOWER(TRIM(COALESCE(products.description, \'\'))) LIKE ?', [$needle])
+                  ->orWhereRaw('LOWER(TRIM(COALESCE(products.type, \'\'))) LIKE ?', [$needle])
+                  ->orWhereRaw('LOWER(TRIM(COALESCE(products.category, \'\'))) LIKE ?', [$needle]);
             });
         }
 
@@ -60,14 +77,10 @@ class PosController extends Controller
     // 🗂 CATEGORIES (for the filter dropdown)
     public function categories()
     {
-        $categories = Product::whereNotNull('type')
-            ->where('type', '!=', '')
-            ->distinct()
-            ->orderBy('type')
-            ->pluck('type')
-            ->values();
-
-        return response()->json($categories);
+        // Fixed taxonomy rather than SELECT DISTINCT type: distinct `type`
+        // values are unbounded (variant codes leak in) and were the direct
+        // cause of the duplicated dropdown entries.
+        return response()->json(ProductCategory::ALL);
     }
 
     // ✅ ADD TO CART

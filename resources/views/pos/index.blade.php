@@ -33,7 +33,7 @@
 
             <div class="pos-search-wrap">
                 <i class="bi bi-search search-glyph"></i>
-                <input type="text" id="pos-search" placeholder="Search by item name, SKU, serial, or brand..." autocomplete="off">
+                <input type="text" id="pos-search" placeholder="Search by item name, SKU, serial, brand, or description..." autocomplete="off">
             </div>
 
             <div class="pos-filter">
@@ -592,7 +592,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ---------------- PRODUCT FEED ---------------- */
     function productRow(p){
-        const [c1, c2] = colorFor(p.type || p.brand || p.part_name);
+        const cat = (p.category || p.type || 'Part').trim();
+        const [c1, c2] = colorFor(cat || p.brand || p.part_name);
         const letter = (p.part_name || '?').charAt(0).toUpperCase();
         return `
             <div class="product-row">
@@ -600,7 +601,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="p-info">
                     <div class="p-name">${esc(p.part_name)}</div>
                     <div class="p-sku">SKU: ${esc(p.item_code)}</div>
-                    <div class="p-meta">${esc(p.brand || 'No Brand')} &middot; ${esc(p.type || 'Part')} &middot; Stock: ${p.stock_level}</div>
+                    <div class="p-meta">${esc(p.brand || 'No Brand')} &middot; ${esc(cat)} &middot; Stock: ${p.stock_level}</div>
                 </div>
                 <div class="p-right">
                     <div class="p-price">${money(p.price)}</div>
@@ -610,8 +611,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function loadProducts(){
-        const search = encodeURIComponent($('pos-search').value);
-        const category = encodeURIComponent($('pos-category').value);
+        // Trim before sending so trailing spaces do not silently zero the feed.
+        const search = encodeURIComponent($('pos-search').value.trim());
+        const category = encodeURIComponent(($('pos-category').value || 'all').trim());
         fetch(`/pos/search?search=${search}&category=${category}`)
             .then(r => r.json())
             .then(products => {
@@ -733,10 +735,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ---------------- SEARCH / FILTER ---------------- */
     let searchTimer;
-    $('pos-search').addEventListener('keyup', function () {
+    function scheduleSearch(){
         clearTimeout(searchTimer);
         searchTimer = setTimeout(loadProducts, 250);
-    });
+    }
+    // `input` covers paste/drag/autofill, which keyup does not fire for.
+    $('pos-search').addEventListener('input', scheduleSearch);
+    $('pos-search').addEventListener('keyup', scheduleSearch);
     $('pos-category').addEventListener('change', loadProducts);
 
     /* ---------------- ACTIONS ---------------- */

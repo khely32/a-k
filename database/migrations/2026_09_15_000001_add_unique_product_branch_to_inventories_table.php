@@ -19,13 +19,16 @@ return new class extends Migration
     public function up(): void
     {
         // Collapse any pre-existing duplicate rows, keeping the lowest id.
-        // Postgres-compatible, tested against Neon.
+        //
+        // Written as a NOT IN (SELECT MIN(id) ...) subquery rather than
+        // "DELETE ... USING": the USING form is Postgres-only and blew up on
+        // the SQLite connection the test suite runs on, which silently made
+        // every RefreshDatabase test error out before it started.
         DB::statement('
-            DELETE FROM inventories a
-            USING inventories b
-            WHERE a.product_id = b.product_id
-              AND a.branch_id = b.branch_id
-              AND a.id > b.id
+            DELETE FROM inventories
+            WHERE id NOT IN (
+                SELECT MIN(id) FROM inventories GROUP BY product_id, branch_id
+            )
         ');
 
         Schema::table('inventories', function (Blueprint $table) {

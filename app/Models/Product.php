@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Support\ProductCategory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Product extends Model
 {
-    protected $fillable = ['serial_number', 'name', 'brand', 'type', 'color', 'size', 'quantity', 'price', 'description', 'branch_id'];
+    protected $fillable = ['serial_number', 'name', 'brand', 'type', 'category', 'color', 'size', 'quantity', 'price', 'description', 'branch_id'];
 
     public function inventories(): HasMany
     {
@@ -29,6 +30,23 @@ class Product extends Model
 
                 $product->serial_number = $serial;
             }
+        });
+
+        // Keep `category` normalised without ever touching `type`: type still
+        // carries variant/size codes used by duplicate detection.
+        static::saving(function ($product) {
+            $category = $product->category ?? null;
+
+            // Re-derive whenever `type` changes so an edited product does not
+            // keep a stale grouping, otherwise trust (but re-spell) what we
+            // were given.
+            if ($product->isDirty('type') || ! ProductCategory::isValid($category)) {
+                $product->category = ProductCategory::resolve($product->type, $product->name);
+
+                return;
+            }
+
+            $product->category = ProductCategory::canonicalise($category) ?? $category;
         });
 
         // Master-catalog hook (mirrors the SQL TRIGGER request):
