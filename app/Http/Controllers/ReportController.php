@@ -77,7 +77,9 @@ class ReportController extends Controller
             $days = 7;
         }
 
-        $branchNames = Branch::orderBy('id')->pluck('branch_name', 'id');
+        $branches = Branch::orderBy('id')->get();
+        $branchNames = $branches->pluck('branch_name', 'id');
+        $branchLabels = $branches->pluck('label', 'id');
 
         $branchParam = $request->get('branch', 'all');
         $filterBranchId = null;
@@ -161,7 +163,7 @@ class ReportController extends Controller
                     'branch_id'     => $branchId === 0 ? null : $branchId,
                     'branch_name'   => $branchId === 0
                         ? 'Unassigned'
-                        : ($branchNames[$branchId] ?? "Branch #{$branchId}"),
+                        : ($branchLabels[$branchId] ?? $branchNames[$branchId] ?? "Branch #{$branchId}"),
                     'transactions'  => $figures['transactions'],
                     'total'         => round($figures['total'], 2),
                     'share'         => $dayTotal > 0
@@ -199,7 +201,7 @@ class ReportController extends Controller
             'branch'       => $filterBranchId,
             'branch_label' => $filterBranchId === null
                 ? 'All Branches'
-                : ($branchNames[$filterBranchId] ?? "Branch #{$filterBranchId}"),
+                : ($branchLabels[$filterBranchId] ?? "Branch #{$filterBranchId}"),
             'today'        => [
                 'transactions' => $todayBucket['transactions'],
                 'total'        => round($todayBucket['total'], 2),

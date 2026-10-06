@@ -844,7 +844,7 @@
                     <select id="di-branch" aria-label="Filter daily income by branch">
                         <option value="all">All Branches</option>
                         @foreach($branches as $diBranch)
-                            <option value="{{ $diBranch->id }}">{{ $diBranch->branch_name }}</option>
+                            <option value="{{ $diBranch->id }}">{{ $diBranch->label }}</option>
                         @endforeach
                     </select>
                     <i class="bi bi-chevron-down di-caret"></i>

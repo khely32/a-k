@@ -25,6 +25,18 @@ class Branch extends Model
         return $this->branch_name;
     }
 
+    /**
+     * Display label used in reports and dropdowns.
+     *
+     * The main branch is always presented as "Main Branch" regardless of the
+     * town its row is named after, so headers read consistently wherever a
+     * branch is shown.
+     */
+    public function getLabelAttribute()
+    {
+        return $this->is_main ? 'Main Branch' : $this->branch_name;
+    }
+
     public function isMainBranch(): bool
     {
         return (bool) $this->is_main;
