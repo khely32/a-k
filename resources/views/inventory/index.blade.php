@@ -411,7 +411,9 @@
                                 )">
                                 <i class="bi bi-eye"></i>
                             </button>
-                            <a href="{{ route('products.edit', ['product' => $product, 'from' => 'inventory']) }}" class="act-btn act-edit" data-bs-toggle="tooltip" title="Edit">
+                            <a href="{{ route('products.edit', ['product' => $product, 'from' => 'inventory']) }}"
+                               data-edit-base="{{ route('products.edit', $product) }}"
+                               class="act-btn act-edit" data-bs-toggle="tooltip" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <form class="act-del-form" action="{{ route('products.destroy', $product) }}" method="POST" onsubmit="return confirm('Delete this product from inventory?');">
@@ -572,7 +574,7 @@
             });
         }
 
-        function applyFilters() {
+        function recomputeRows() {
             const query = (searchInput.value || '').toLowerCase().trim();
             const category = (categorySelect.value || '').toLowerCase().trim();
             const brand = (brandSelect.value || '').toLowerCase().trim();
@@ -595,9 +597,48 @@
                     filteredRows.push(row);
                 }
             });
+        }
 
+        function applyFilters() {
+            recomputeRows();
             currentPage = 1;
             renderList();
+            syncUrl();
+        }
+
+        /**
+         * Keep /inventory?page=&search=&category=&brand=&color= in sync with
+         * the current view state and stamp the same state onto every edit
+         * link so editing item #84 on page 9 and coming back lands on page 9.
+         */
+        function syncUrl() {
+            const params = new URLSearchParams();
+            const search = (searchInput.value || '').trim();
+            const category = (categorySelect.value || '').trim();
+            const brand = (brandSelect.value || '').trim();
+            const color = (colorSelect.value || '').trim();
+
+            if (currentPage > 1) params.set('page', currentPage);
+            if (search) params.set('search', search);
+            if (category) params.set('category', category);
+            if (brand) params.set('brand', brand);
+            if (color) params.set('color', color);
+
+            const qs = params.toString();
+            history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : ''));
+
+            document.querySelectorAll('.inventory-row .act-edit').forEach(function (a) {
+                const base = a.dataset.editBase;
+                if (!base) return;
+                const p = new URLSearchParams();
+                p.set('from', 'inventory');
+                if (currentPage > 1) p.set('page', currentPage);
+                if (search) p.set('search', search);
+                if (category) p.set('category', category);
+                if (brand) p.set('brand', brand);
+                if (color) p.set('color', color);
+                a.href = base + '?' + p.toString();
+            });
         }
 
         function renderList() {
@@ -646,6 +687,7 @@
             if (currentPage > 1) {
                 currentPage--;
                 renderList();
+                syncUrl();
             }
         });
         nextBtn.addEventListener('click', function () {
@@ -653,11 +695,70 @@
             if (currentPage < pageCount) {
                 currentPage++;
                 renderList();
+                syncUrl();
             }
         });
 
-        populateBrandOptions();
-        applyFilters();
+        function restoreStateFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+
+            const search = (params.get('search') || '').trim();
+            const category = (params.get('category') || '').trim();
+            const brand = (params.get('brand') || '').trim();
+            const color = (params.get('color') || '').trim();
+            const page = parseInt(params.get('page') || '', 10);
+
+            if (search) searchInput.value = search;
+
+            // Order matters: brand options depend on category, color options
+            // depend on category + brand, so re-derive before selecting.
+            let wantsCategory = '';
+            if (category) {
+                const match = Array.from(categorySelect.options).some(function (o) {
+                    return o.value.toLowerCase().trim() === category.toLowerCase();
+                });
+                if (match) wantsCategory = category;
+            }
+            categorySelect.value = wantsCategory;
+            populateBrandOptions();
+
+            let wantsBrand = '';
+            if (brand) {
+                const match = Array.from(brandSelect.options).some(function (o) {
+                    return o.value.toLowerCase().trim() === brand.toLowerCase();
+                });
+                if (match) wantsBrand = brand;
+            }
+            brandSelect.value = wantsBrand;
+            populateColorOptions();
+
+            let wantsColor = '';
+            if (color) {
+                const match = Array.from(colorSelect.options).some(function (o) {
+                    return o.value.toLowerCase().trim() === color.toLowerCase();
+                });
+                if (match) wantsColor = color;
+            }
+            colorSelect.value = wantsColor;
+
+            recomputeRows();
+
+            // Render the requested page, clamping to the visible result set.
+            if (Number.isFinite(page)) currentPage = page;
+            renderList();
+        }
+
+        // Restore page + filters coming in from the URL: either a direct
+        // /inventory?page=9 or the redirect back from the edit page, which
+        // carries the same params. When nothing is present this is a no-op.
+        const urlHasState = new URLSearchParams(window.location.search).toString() !== '';
+        if (urlHasState) {
+            restoreStateFromUrl();
+        } else {
+            populateBrandOptions();
+            applyFilters();
+        }
+        syncUrl();
 
         document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
             new bootstrap.Tooltip(el);

@@ -195,8 +195,13 @@ class ProductController extends Controller
             ]
         );
 
+        // Preserve the inventory view state (page + filters) carried from the
+        // edit link so "Update Product" lands back on the same page instead
+        // of resetting to page 1.
         $redirect = $request->input('from') === 'inventory'
-            ? route('inventory.index')
+            ? route('inventory.index', array_filter($request->only([
+                'page', 'search', 'category', 'brand', 'color',
+            ]), static fn ($v) => $v !== '' && $v !== null))
             : route('products.index');
 
         return redirect($redirect)->with('success', 'Product updated successfully.');

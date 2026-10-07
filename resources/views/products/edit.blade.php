@@ -57,9 +57,20 @@
             </h1>
             <p class="mb-0" style="color:#64748b;font-size:.78rem;">Update item attributes, pricing, and stock configuration.</p>
         </div>
-        @php $fromInventory = request('from') === 'inventory'; @endphp
+        @php
+    $fromInventory = request('from') === 'inventory';
+    // Carry the inventory view state (page + filters) so Back / Cancel /
+    // Update all land on the same table page it was left on.
+    $inventoryReturnQuery = http_build_query(array_filter(
+        request()->only(['page', 'search', 'category', 'brand', 'color']),
+        static fn ($v) => $v !== '' && $v !== null
+    ));
+    $inventoryReturnUrl = $inventoryReturnQuery
+        ? route('inventory.index') . '?' . $inventoryReturnQuery
+        : route('inventory.index');
+@endphp
         </div>
-        <a href="{{ $fromInventory ? route('inventory.index') : route('products.index') }}" class="ep-btn-cancel">
+        <a href="{{ $fromInventory ? $inventoryReturnUrl : route('products.index') }}" class="ep-btn-cancel">
             <i class="bi bi-arrow-left"></i>
             {{ $fromInventory ? 'Back to Inventory' : 'Back to Products' }}
         </a>
@@ -89,6 +100,11 @@
             @method('PUT')
             @if(request('from') === 'inventory')
             <input type="hidden" name="from" value="inventory">
+            @foreach(['page', 'search', 'category', 'brand', 'color'] as $invParam)
+                @if(request($invParam) !== null && request($invParam) !== '')
+                    <input type="hidden" name="{{ $invParam }}" value="{{ request($invParam) }}">
+                @endif
+            @endforeach
             @endif
 
             {{-- SECTION: Basic Information --}}
@@ -212,7 +228,7 @@
 
             {{-- ACTION BUTTONS --}}
             <div class="d-flex align-items-center justify-content-end gap-3 pt-4" style="border-top:1px solid rgba(255,255,255,.05);">
-                <a href="{{ request('from') === 'inventory' ? route('inventory.index') : route('products.index') }}" class="ep-btn-cancel">
+                <a href="{{ $fromInventory ? $inventoryReturnUrl : route('products.index') }}" class="ep-btn-cancel">
                     <i class="bi bi-x-lg"></i> Cancel
                 </a>
                 <button type="submit" class="ep-btn-save">
