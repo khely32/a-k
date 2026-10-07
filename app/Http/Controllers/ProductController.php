@@ -234,9 +234,25 @@ class ProductController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Product $product)
+    public function destroy(Request $request, Product $product)
     {
         $product->delete();
+
+        // AJAX delete from the Inventory table: reply in place so the client
+        // can re-render without a page reload.
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        // Deleting from the Inventory view must stay on the Inventory view,
+        // carrying the page + filters it was left on.
+        if ($request->input('from') === 'inventory') {
+            return redirect()->route('inventory.index', array_filter(
+                $request->only(['page', 'search', 'category', 'brand', 'color']),
+                static fn ($v) => $v !== '' && $v !== null
+            ))->with('success', 'Product deleted successfully.');
+        }
+
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
     }
 

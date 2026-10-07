@@ -416,9 +416,15 @@
                                class="act-btn act-edit" data-bs-toggle="tooltip" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form class="act-del-form" action="{{ route('products.destroy', $product) }}" method="POST" onsubmit="return confirm('Delete this product from inventory?');">
+                            <form class="act-del-form" action="{{ route('products.destroy', $product) }}" method="POST">
                                 @csrf
                                 @method('DELETE')
+                                <input type="hidden" name="from" value="inventory">
+                                @foreach(['page', 'search', 'category', 'brand', 'color'] as $delParam)
+                                    @if(request($delParam) !== null && request($delParam) !== '')
+                                        <input type="hidden" name="{{ $delParam }}" value="{{ request($delParam) }}">
+                                    @endif
+                                @endforeach
                                 <button type="submit" class="act-btn act-del" data-bs-toggle="tooltip" title="Delete">
                                     <i class="bi bi-trash"></i>
                                 </button>
@@ -504,8 +510,11 @@
         const categorySelect = document.getElementById('category-filter');
         const brandSelect = document.getElementById('brand-filter');
         const colorSelect = document.getElementById('color-filter');
-        const rows = Array.from(document.querySelectorAll('.inventory-row'));
+        let rows = Array.from(document.querySelectorAll('.inventory-row'));
         const noResults = document.getElementById('no-filter-results');
+        const noResultsHead = noResults.querySelector('h5');
+        const noResultsBody = noResults.querySelector('p');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
         const PAGE_SIZE = 10;
         let currentPage = 1;
@@ -658,10 +667,13 @@
             }
 
             if (rows.length === 0) {
-                noResults.style.display = 'none';
+                noResultsHead.textContent = 'No Products Found';
+                noResultsBody.textContent = 'Add products to see them in inventory.';
             } else {
-                noResults.style.display = total === 0 ? '' : 'none';
+                noResultsHead.textContent = 'No matching products';
+                noResultsBody.textContent = 'Try a different search or category.';
             }
+            noResults.style.display = total === 0 ? '' : 'none';
 
             pageInfoStart.textContent = total ? start + 1 : 0;
             pageInfoEnd.textContent = total ? end : 0;
@@ -762,6 +774,46 @@
 
         document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
             new bootstrap.Tooltip(el);
+        });
+
+        // In-place delete: confirm, DELETE via fetch, then drop the row and
+        // re-render so the Inventory view stays put (no redirect to Products).
+        // renderList clamps currentPage when the deleted item was the last on
+        // the page, stepping back to the preceding page automatically.
+        document.querySelectorAll('.act-del-form').forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                if (!window.confirm('Delete this product from inventory?')) return;
+
+                const row = form.closest('.inventory-row');
+                const body = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: body
+                })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (!data || data.success !== true) {
+                        alert('Failed to delete the product. Please try again.');
+                        return;
+                    }
+                    if (row) row.remove();
+                    rows = Array.from(document.querySelectorAll('.inventory-row'));
+                    populateBrandOptions();
+                    recomputeRows();
+                    renderList();
+                    syncUrl();
+                })
+                .catch(function () {
+                    alert('Failed to delete the product. Please try again.');
+                });
+            });
         });
     })();
 </script>
