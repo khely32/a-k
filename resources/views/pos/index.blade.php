@@ -90,10 +90,11 @@
 
                 <!-- Payment Method -->
                 <div class="console-field">
-                    <label for="payment-method">Payment Method</label>
-                    <select id="payment-method" class="neo-select">
-                        <option value="cash">Cash</option>
-                    </select>
+                    <label>Payment Method</label>
+                    <div id="payment-method" class="payment-pill" aria-label="Payment method: Cash">
+                        <i class="bi bi-cash-stack"></i>
+                        <span>Cash</span>
+                    </div>
                 </div>
 
                 <!-- Actions -->
@@ -264,6 +265,25 @@
         border-color:rgba(0,242,254,.5);
         box-shadow:0 0 0 3px rgba(0,242,254,.12);
     }
+    .neo-select option{
+        background:#0f172a;
+        color:#f8fafc;
+    }
+    .payment-pill{
+        display:flex;
+        align-items:center;
+        gap:9px;
+        width:100%;
+        background:#0b0d10;
+        color:#dfe6f0;
+        border:1px solid rgba(255,255,255,.12);
+        border-radius:12px;
+        padding:9px 12px;
+        font-size:.85rem;
+        pointer-events:none;
+        user-select:none;
+    }
+    .payment-pill i{ color:#00f2fe; font-size:.95rem; }
 
     .pos-product-list{
         flex:1;
@@ -703,7 +723,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     /* ---------------- PAYMENT METHOD ---------------- */
-    const paymentSelect = $('payment-method');
+    // Cash is the only supported method; shown as a static pill.
+    const paymentMethod = 'cash';
 
     /* ---------------- SEARCH / FILTER ---------------- */
     let searchTimer;
@@ -727,7 +748,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     $('checkout-btn').addEventListener('click', function () {
-        const paymentMethod = paymentSelect.value;
         const customerIdEl = $('customer-id');
         const customerId = customerIdEl ? customerIdEl.value.trim() : '';
         fetch('{{ route("pos.checkout") }}', {
