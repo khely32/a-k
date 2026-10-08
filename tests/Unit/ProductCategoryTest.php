@@ -7,19 +7,27 @@ use Tests\TestCase;
 
 class ProductCategoryTest extends TestCase
 {
-    public function test_dropdown_list_is_the_ten_canonical_categories(): void
+    public function test_dropdown_list_is_the_canonical_categories(): void
     {
         $this->assertSame([
             'Bearings',
+            'Body & Fairings',
             'Brake System',
+            'Cooling System',
             'Drive Train & Transmission',
             'Electrical & Lighting',
             'Engine Parts',
+            'Exhaust & Emissions',
             'Fasteners & Hardware',
+            'Frame & Chassis',
+            'Fuel System & Air Intake',
+            'Handlebars & Controls',
+            'Instrumentation & Gauges',
             'Lubricants & Maintenance',
             'Mirrors & Accessories',
             'Suspension & Steering',
             'Tires & Inner Tubes',
+            'Wheels & Rims',
         ], ProductCategory::ALL);
     }
 
@@ -91,16 +99,24 @@ class ProductCategoryTest extends TestCase
     public function test_every_canonical_category_is_reachable_from_a_type(): void
     {
         $samples = [
-            ProductCategory::BEARINGS      => 'Bearing',
-            ProductCategory::BRAKE         => 'Brake Pad',
-            ProductCategory::DRIVE_TRAIN   => 'Chain',
-            ProductCategory::ELECTRICAL    => 'Battery',
-            ProductCategory::ENGINE        => 'Piston',
-            ProductCategory::FASTENERS     => 'Bolt',
-            ProductCategory::LUBRICANTS    => 'Engine Oil',
-            ProductCategory::ACCESSORIES   => 'Mirror',
-            ProductCategory::SUSPENSION    => 'Rear Shock Absorber',
-            ProductCategory::TIRES         => 'Tire',
+            ProductCategory::BEARINGS        => 'Bearing',
+            ProductCategory::BODY            => 'Fender',
+            ProductCategory::BRAKE           => 'Brake Pad',
+            ProductCategory::COOLING         => 'Radiator',
+            ProductCategory::DRIVE_TRAIN     => 'Chain',
+            ProductCategory::ELECTRICAL      => 'Battery',
+            ProductCategory::ENGINE          => 'Piston',
+            ProductCategory::EXHAUST         => 'Exhaust Pipe',
+            ProductCategory::FASTENERS       => 'Bolt',
+            ProductCategory::FRAME           => 'Crash Guard',
+            ProductCategory::FUEL            => 'Air Filter',
+            ProductCategory::HANDLEBARS      => 'Handlebar',
+            ProductCategory::INSTRUMENTATION => 'Speedometer',
+            ProductCategory::LUBRICANTS      => 'Engine Oil',
+            ProductCategory::ACCESSORIES     => 'Mirror',
+            ProductCategory::SUSPENSION      => 'Rear Shock Absorber',
+            ProductCategory::TIRES           => 'Tire',
+            ProductCategory::WHEELS          => 'Mag Wheel',
         ];
 
         foreach ($samples as $category => $type) {
@@ -108,6 +124,75 @@ class ProductCategoryTest extends TestCase
         }
 
         $this->assertSame($samples, array_combine(ProductCategory::ALL, array_values($samples)));
+    }
+
+    /**
+     * Wheels and rims used to be swallowed by Tires & Inner Tubes. They now
+     * get their own dropdown entry without stealing real tires, tubes or
+     * wheel bearings.
+     */
+    public function test_wheels_and_rims_have_their_own_category(): void
+    {
+        $this->assertSame(ProductCategory::WHEELS, ProductCategory::resolve('Wheels & Rims'));
+        $this->assertSame(ProductCategory::WHEELS, ProductCategory::resolve('Mag Wheel 17'));
+        $this->assertSame(ProductCategory::WHEELS, ProductCategory::resolve('Alloy Rim'));
+        $this->assertSame(ProductCategory::WHEELS, ProductCategory::resolve('Rim', 'Spoke Wheel'));
+
+        $this->assertSame(ProductCategory::TIRES, ProductCategory::resolve('Motorcycle Tire'));
+        $this->assertSame(ProductCategory::TIRES, ProductCategory::resolve('Tubeless Inner Tube'));
+        $this->assertSame(ProductCategory::BEARINGS, ProductCategory::resolve('Wheel Bearing'));
+
+        $this->assertTrue(ProductCategory::isValid(ProductCategory::WHEELS));
+        $this->assertSame(ProductCategory::WHEELS, ProductCategory::canonicalise('WHEELS & RIMS'));
+    }
+
+    /**
+     * The groups the owner types when adding a product ("Fuel System & Air
+     * Intake", "Exhaust & Emissions", ...) are real categories now, so the
+     * typed value survives - while rules above each new group still override
+     * it when the product clearly belongs elsewhere.
+     */
+    public function test_typed_system_groups_survive_resolution(): void
+    {
+        $typed = [
+            ProductCategory::BODY            => ['Body & Fairings', 'Front Fender Assembly'],
+            ProductCategory::COOLING         => ['Cooling System', 'Big-Volume Aluminum Radiator'],
+            ProductCategory::EXHAUST         => ['Exhaust & Emissions', 'Full System Exhaust Pipe'],
+            ProductCategory::FRAME           => ['Frame & Chassis', 'Tubular Crash Guard Protector'],
+            ProductCategory::FUEL            => ['Fuel System & Air Intake', 'High-Flow Engine Air Filter Element'],
+            ProductCategory::HANDLEBARS      => ['Handlebars & Controls', 'Handlebar Switch Assembly'],
+            ProductCategory::INSTRUMENTATION => ['Instrumentation & Gauges', 'Speedometer Cable & Drive Gear'],
+            ProductCategory::WHEELS          => ['Wheels & Rims', 'Stainless Steel Spoke & Nipple Set'],
+        ];
+
+        foreach ($typed as $category => [$type, $name]) {
+            $this->assertSame($category, ProductCategory::resolve($type, $name), $name);
+            $this->assertTrue(ProductCategory::isValid($category), $category);
+        }
+
+        // A typed system never steals a product whose name says otherwise...
+        $this->assertSame(
+            ProductCategory::LUBRICANTS,
+            ProductCategory::resolve('Lubricants & Maintenance', 'Koby Carburetor & Choke Cleaner')
+        );
+        $this->assertSame(
+            ProductCategory::FASTENERS,
+            ProductCategory::resolve('Fasteners & Hardware', 'Stainless Flange Body Bolt')
+        );
+        $this->assertSame(
+            ProductCategory::ACCESSORIES,
+            ProductCategory::resolve('Mirrors & Accessories', 'Side Cover Flap / Body Fairing')
+        );
+        $this->assertSame(
+            ProductCategory::TIRES,
+            ProductCategory::resolve('Tires & Inner Tubes', 'External Tire Tube-Type')
+        );
+
+        // ...and the typed group wins when the name alone is ambiguous.
+        $this->assertSame(
+            ProductCategory::ENGINE,
+            ProductCategory::resolve('Fasteners & Hardware', 'Stainless Engine Cover')
+        );
     }
 
     /**

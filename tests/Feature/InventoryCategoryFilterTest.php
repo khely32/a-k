@@ -116,4 +116,22 @@ class InventoryCategoryFilterTest extends TestCase
 
         $this->assertStringContainsString('Iridium Spark Plug', $html);
     }
+
+    /**
+     * Wheels and rims are their own dropdown entry, and the products filed
+     * under it carry that category on their row for the client-side filter.
+     */
+    public function test_wheel_and_rim_products_get_their_own_entry(): void
+    {
+        $this->addProduct('Mag Wheel 17', 'Wheels & Rims');
+        $this->addProduct('Alloy Rim', 'Rim');
+
+        $html = $this->actingAs($this->user)->get('/inventory')->assertOk()->getContent();
+
+        $this->assertStringContainsString(
+            '<option value="Wheels &amp; Rims">Wheels &amp; Rims</option>',
+            $html
+        );
+        $this->assertSame(2, substr_count($html, 'data-category="wheels &amp; rims"'));
+    }
 }

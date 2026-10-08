@@ -79,22 +79,44 @@ class PosCategoryFilterTest extends TestCase
         return $response->json();
     }
 
-    public function test_dropdown_returns_the_fixed_ten_categories(): void
+    public function test_dropdown_returns_the_fixed_categories(): void
     {
         $this->addProduct('4T Engine Oil', 'Motor Oil / Lubricants');
 
         $this->assertSame([
             'Bearings',
+            'Body & Fairings',
             'Brake System',
+            'Cooling System',
             'Drive Train & Transmission',
             'Electrical & Lighting',
             'Engine Parts',
+            'Exhaust & Emissions',
             'Fasteners & Hardware',
+            'Frame & Chassis',
+            'Fuel System & Air Intake',
+            'Handlebars & Controls',
+            'Instrumentation & Gauges',
             'Lubricants & Maintenance',
             'Mirrors & Accessories',
             'Suspension & Steering',
             'Tires & Inner Tubes',
+            'Wheels & Rims',
         ], $this->categories());
+    }
+
+    /**
+     * The new Wheels & Rims entry has to actually return its products.
+     */
+    public function test_wheel_products_are_filterable_under_wheels_and_rims(): void
+    {
+        $this->addProduct('Mag Wheel 17', 'Wheels & Rims');
+        $this->addProduct('Alloy Rim', 'Rim');
+        $this->addProduct('Motorcycle Tire', 'Tire');
+
+        $this->assertCount(2, $this->search('Wheels & Rims'));
+        $this->assertCount(1, $this->search('Tires & Inner Tubes'));
+        $this->assertCount(3, $this->search('all'));
     }
 
     /**

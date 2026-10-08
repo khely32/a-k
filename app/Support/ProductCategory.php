@@ -17,27 +17,43 @@ namespace App\Support;
 class ProductCategory
 {
     public const BEARINGS = 'Bearings';
+    public const BODY = 'Body & Fairings';
     public const BRAKE = 'Brake System';
+    public const COOLING = 'Cooling System';
     public const DRIVE_TRAIN = 'Drive Train & Transmission';
     public const ELECTRICAL = 'Electrical & Lighting';
     public const ENGINE = 'Engine Parts';
+    public const EXHAUST = 'Exhaust & Emissions';
     public const FASTENERS = 'Fasteners & Hardware';
+    public const FRAME = 'Frame & Chassis';
+    public const FUEL = 'Fuel System & Air Intake';
+    public const HANDLEBARS = 'Handlebars & Controls';
+    public const INSTRUMENTATION = 'Instrumentation & Gauges';
     public const LUBRICANTS = 'Lubricants & Maintenance';
     public const ACCESSORIES = 'Mirrors & Accessories';
     public const SUSPENSION = 'Suspension & Steering';
     public const TIRES = 'Tires & Inner Tubes';
+    public const WHEELS = 'Wheels & Rims';
 
     public const ALL = [
         self::BEARINGS,
+        self::BODY,
         self::BRAKE,
+        self::COOLING,
         self::DRIVE_TRAIN,
         self::ELECTRICAL,
         self::ENGINE,
+        self::EXHAUST,
         self::FASTENERS,
+        self::FRAME,
+        self::FUEL,
+        self::HANDLEBARS,
+        self::INSTRUMENTATION,
         self::LUBRICANTS,
         self::ACCESSORIES,
         self::SUSPENSION,
         self::TIRES,
+        self::WHEELS,
     ];
 
     /**
@@ -53,35 +69,53 @@ class ProductCategory
      * Ordered, first-match-wins rules. Each entry is [category, patterns].
      *
      * Patterns are matched as whole words against the lowercased
-     * "type + name" haystack. Order carries real meaning:
+     * "type + name" haystack - the type is in there because that is what
+     * the owner picks when adding a product ("Fuel System & Air Intake"),
+     * so a type naming a system wins whenever no rule above it disagrees.
+     * Order carries real meaning:
+     *  - handlebars before accessories, so a "Handlebar Grips" set stays
+     *    with its bar instead of being filed as a generic accessory
      *  - accessories before brake, so "Accessories / Handle Levers" stays in
      *    Accessories while a bare "Lever" still resolves to Brake System
+     *  - suspension before wheels/tires, so a "Shock Inner Tube" is not a
+     *    tire and "Steering Bearing" (checked first) stays Bearings
+     *  - fuel before the bare "filter" rule, so an air filter is a fuel
+     *    system part rather than Engine Parts, while "Oil Filter" - which
+     *    never says "air" - is still Engine Parts
      *  - engine "filter" before lubricants, so "Oil Filter" is Engine Parts
      *  - lubricants before engine, so "Engine Oil" is not Engine Parts
      *  - lubricants before drive train, so "Chain Lube" is not Drive Train
-     *  - suspension after bearings, so "Steering Bearing" stays Bearings
-     *  - suspension before lubricants, so "Rear Shock Absorber Oil" is not
-     *    filed as a lubricant (a bare "Fork Oil" carries no suspension
-     *    keyword and still lands in Lubricants & Maintenance)
+     *  - instrumentation before drive train, so a "Speedometer Cable" is
+     *    instrumentation rather than transmission cabling
+     *  - body dead last, so "Body Bolt" stays Fasteners. A "Body Fairing"
+     *    typed Mirrors & Accessories stays there via the "accessor" rule,
+     *    while an untyped fender or body panel lands in Body & Fairings
      */
     private const RULES = [
         [self::BEARINGS, ['bearing']],
-        [self::ACCESSORIES, ['accessor', 'mirror', 'grip', 'fairing', 'seat cover']],
+        [self::HANDLEBARS, ['handlebar', 'handle bar']],
+        [self::ACCESSORIES, ['accessor', 'mirror', 'grip', 'seat cover']],
         [self::BRAKE, ['brake', 'lever', 'master cylinder', 'disc', 'rotor']],
-        [self::TIRES, ['tire', 'tyre', 'tube', 'rim', 'wheel']],
         [self::SUSPENSION, [
             'shock', 'absorber', 'suspension', 'steering', 'swing arm',
             'swingarm', 'ball joint', 'tie rod',
         ]],
+        [self::WHEELS, ['wheel', 'rim', 'mag', 'spoke']],
+        [self::TIRES, ['tire', 'tyre', 'tube']],
+        [self::EXHAUST, ['exhaust', 'muffler', 'silencer']],
+        [self::COOLING, ['radiator', 'cooling', 'thermostat']],
+        [self::FRAME, ['frame', 'chassis', 'crash guard', 'side stand', 'center stand']],
+        [self::FUEL, ['fuel', 'air filter', 'intake']],
         [self::ENGINE, ['filter']],
         [self::LUBRICANTS, [
             'oil', 'lubricant', 'lube', 'grease', 'coolant', 'sealant',
             'spray', 'maintenance', 'cleaning', 'cleaner', 'atf', 'additive',
             'fluid',
         ]],
+        [self::INSTRUMENTATION, ['speedometer', 'odometer', 'gauge', 'instrument']],
         [self::DRIVE_TRAIN, [
             'chain', 'sprocket', 'clutch', 'roller weight', 'drive belt',
-            'gearbox', 'transmission', 'cable',
+            'gearbox', 'transmission', 'cable', 'drive train',
         ]],
         [self::ELECTRICAL, [
             'battery', 'headlight', 'tail light', 'light', 'bulb', 'horn',
@@ -96,6 +130,7 @@ class ProductCategory
             'nut', 'bolt', 'screw', 'washer', 'axle', 'clip', 'fastener',
             'hardware', 'tool', 'pin',
         ]],
+        [self::BODY, ['fender', 'body']],
     ];
 
     /**
