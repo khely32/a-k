@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Inventory;
 use App\Models\Branch;
 use App\Models\CategorySize;
+use App\Support\PartFamily;
 use App\Support\ProductCategory;
 
 class ProductController extends Controller
@@ -56,7 +57,11 @@ class ProductController extends Controller
         // its own option.
         $categories = ProductCategory::options($products->pluck('category'));
 
-        return view('products.index', compact('products', 'branches', 'categories', 'totalInventoryValue', 'isMainBranch'));
+        // Part filter options: the motorcycle part each product IS, derived
+        // from its name and, failing that, its category (see PartFamily).
+        $parts = PartFamily::options($products->pluck('part_family'));
+
+        return view('products.index', compact('products', 'branches', 'categories', 'parts', 'totalInventoryValue', 'isMainBranch'));
     }
 
     /**

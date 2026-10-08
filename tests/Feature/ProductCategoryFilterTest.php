@@ -71,6 +71,16 @@ class ProductCategoryFilterTest extends TestCase
         return array_map('html_entity_decode', $options[1]);
     }
 
+    private function partDropdownOptions(string $html): array
+    {
+        preg_match('/<select id="partFilter".*?<\/select>/s', $html, $m);
+        $this->assertNotEmpty($m, 'part dropdown not found');
+
+        preg_match_all('/<option value="([^"]*)"/', $m[0], $options);
+
+        return array_map('html_entity_decode', $options[1]);
+    }
+
     /**
      * The old dropdown was DISTINCT `type`, so the redundant spellings the
      * brief lists each showed up as its own option.
@@ -124,5 +134,41 @@ class ProductCategoryFilterTest extends TestCase
 
         $this->assertStringContainsString('data-category="tires &amp; inner tubes"', $html);
         $this->assertStringContainsString('Tires &amp; Inner Tubes', $html);
+    }
+
+    /**
+     * The Part filter reads what each product IS (from its name), not the
+     * broad system it belongs to; the category only fills in for goods
+     * whose name names no part at all.
+     */
+    public function test_part_dropdown_lists_the_motorcycle_parts(): void
+    {
+        $tire = $this->addProduct('Motorcycle Tire', 'Tires & Inner Tubes');
+        $this->addProduct('Iridium Spark Plug', 'Engine Parts');
+        $this->addProduct('Brembo Brake Pad', 'Brake System');
+        $lube = $this->addProduct('Koby De-Rust Spray', 'Lubricants & Maintenance');
+        $unmatched = $this->addProduct('Rear Shock Absorber', 'Suspension & Steering');
+
+        $html = $this->page();
+
+        $this->assertSame(
+            ['', 'Brake Pad', 'Lubricants', 'Spark Plug', 'Tire'],
+            $this->partDropdownOptions($html)
+        );
+
+        // Rows expose their part so the client-side filter can match it.
+        $this->assertStringContainsString('data-part="spark plug"', $html);
+
+        // A product that names no part keeps its row (reachable under All
+        // Parts) instead of being dropped from the table.
+        $this->assertStringContainsString('data-part=""', $html);
+
+        // Saving derived each part family: from the name where it could...
+        $this->assertSame('Tire', $tire->fresh()->part_family);
+
+        // ...and from the category where the name said nothing.
+        $this->assertSame('Lubricants', $lube->fresh()->part_family);
+
+        $this->assertNull($unmatched->fresh()->part_family);
     }
 }

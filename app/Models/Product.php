@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PartFamily;
 use App\Support\ProductCategory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,7 +10,7 @@ use Illuminate\Support\Str;
 
 class Product extends Model
 {
-    protected $fillable = ['serial_number', 'name', 'brand', 'type', 'category', 'color', 'size', 'quantity', 'price', 'description', 'branch_id'];
+    protected $fillable = ['serial_number', 'name', 'brand', 'type', 'category', 'part_family', 'color', 'size', 'quantity', 'price', 'description', 'branch_id'];
 
     public function inventories(): HasMany
     {
@@ -42,11 +43,16 @@ class Product extends Model
             // were given.
             if ($product->isDirty('type') || ! ProductCategory::isValid($category)) {
                 $product->category = ProductCategory::resolve($product->type, $product->name);
-
-                return;
+            } else {
+                $product->category = ProductCategory::canonicalise($category) ?? $category;
             }
 
-            $product->category = ProductCategory::canonicalise($category) ?? $category;
+            // The part family follows the name - "Iridium Spark Plug" is a
+            // Spark Plug - so it is re-derived on every save and a rename
+            // cannot leave a stale part behind (see PartFamily). It runs
+            // after `category` because the category is the last-resort hint
+            // for products whose name names no part.
+            $product->part_family = PartFamily::resolve($product->name, $product->category);
         });
 
         // Master-catalog hook (mirrors the SQL TRIGGER request):

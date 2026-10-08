@@ -170,10 +170,10 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
         <div class="card-body p-3">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4 position-relative">
-                    <input type="text" id="searchInput" class="form-control" placeholder="Search by name, brand, or serial..." style="padding-left:35px;border-radius:10px;">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by name, brand, part, or serial..." style="padding-left:35px;border-radius:10px;">
                     <i class="bi bi-search position-absolute" style="left:20px;top:50%;transform:translateY(-50%);color:var(--accent);opacity:.5;"></i>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <select id="categoryFilter" class="form-select" style="border-radius:10px;">
                         <option value="">All Categories</option>
                         @foreach($categories as $category)
@@ -181,7 +181,17 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
+                    <select id="partFilter" class="form-select" style="border-radius:10px;">
+                        <option value="">All Parts</option>
+                        @foreach($parts as $part)
+                        <option value="{{ $part }}">{{ $part }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="row g-2 align-items-center mt-1">
+                <div class="col-md-4">
                     <select id="brandFilter" class="form-select" style="border-radius:10px;">
                         <option value="">All Brands</option>
                         @foreach($products->pluck('brand')->unique()->filter()->values() as $brand)
@@ -189,7 +199,7 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <button id="clearFilters" class="btn w-100" style="border-radius:10px;border:1px solid rgba(239,68,68,.3);color:var(--text);">
                         <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
                     </button>
@@ -226,6 +236,7 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
                         data-name="{{ strtolower($product->name) }}"
                         data-brand="{{ strtolower($product->brand ?? '') }}"
                         data-category="{{ strtolower($product->category ?? '') }}"
+                        data-part="{{ strtolower($product->part_family ?? '') }}"
                         data-serial="{{ strtolower($product->serial_number) }}">
                         <td class="ps-4 fw-bold" style="font-family:monospace;color:#22D3EE;font-size:.82rem;">{{ $product->serial_number }}</td>
                         <td class="fw-semibold" style="color:#fff;font-size:.85rem;">{{ $product->name }}</td>
@@ -434,6 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ----------------------------------------------------
     const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');
+    const partFilter = document.getElementById('partFilter');
     const brandFilter = document.getElementById('brandFilter');
     const clearFilters = document.getElementById('clearFilters');
     const rows = document.querySelectorAll('.product-row');
@@ -441,19 +453,22 @@ document.addEventListener('DOMContentLoaded', function() {
     function filterTable() {
         const query = searchInput.value.toLowerCase().trim();
         const selectedCategory = (categoryFilter.value || '').toLowerCase().trim();
+        const selectedPart = (partFilter.value || '').toLowerCase().trim();
         const selectedBrand = (brandFilter.value || '').toLowerCase().trim();
 
         rows.forEach(row => {
             const name = row.getAttribute('data-name');
             const brand = row.getAttribute('data-brand');
             const category = row.getAttribute('data-category');
+            const part = row.getAttribute('data-part');
             const serial = row.getAttribute('data-serial');
 
-            const matchesSearch = name.includes(query) || brand.includes(query) || category.includes(query) || serial.includes(query);
+            const matchesSearch = name.includes(query) || brand.includes(query) || category.includes(query) || part.includes(query) || serial.includes(query);
             const matchesCategory = !selectedCategory || category === selectedCategory;
+            const matchesPart = !selectedPart || part === selectedPart;
             const matchesBrand = !selectedBrand || brand === selectedBrand;
 
-            if (matchesSearch && matchesCategory && matchesBrand) {
+            if (matchesSearch && matchesCategory && matchesPart && matchesBrand) {
                 row.classList.remove('d-none');
             } else {
                 row.classList.add('d-none');
@@ -463,12 +478,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (searchInput) searchInput.addEventListener('input', filterTable);
     if (categoryFilter) categoryFilter.addEventListener('change', filterTable);
+    if (partFilter) partFilter.addEventListener('change', filterTable);
     if (brandFilter) brandFilter.addEventListener('change', filterTable);
 
     if (clearFilters) {
         clearFilters.addEventListener('click', function() {
             searchInput.value = '';
             categoryFilter.value = '';
+            partFilter.value = '';
             brandFilter.value = '';
             filterTable();
         });
