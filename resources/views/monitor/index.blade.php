@@ -284,7 +284,7 @@
                         'product_name'  => $inv->product->name ?? 'Unknown',
                         'serial_number' => $inv->product->serial_number ?? '',
                         'brand'         => $inv->product->brand ?? '',
-                        'category'      => $inv->product->type ?? '',
+                        'category'      => $inv->product->category ?? '',
                         'quantity'      => (int) $inv->quantity,
                         'price'         => $inv->product->price ?? 0,
                         'status'        => $inv->quantity <= 0 ? 'out_of_stock' : ($inv->quantity <= 5 ? 'low_stock' : 'in_stock'),

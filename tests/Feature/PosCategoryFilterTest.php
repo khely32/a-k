@@ -79,7 +79,7 @@ class PosCategoryFilterTest extends TestCase
         return $response->json();
     }
 
-    public function test_dropdown_returns_the_fixed_nine_categories(): void
+    public function test_dropdown_returns_the_fixed_ten_categories(): void
     {
         $this->addProduct('4T Engine Oil', 'Motor Oil / Lubricants');
 
@@ -92,6 +92,7 @@ class PosCategoryFilterTest extends TestCase
             'Fasteners & Hardware',
             'Lubricants & Maintenance',
             'Mirrors & Accessories',
+            'Suspension & Steering',
             'Tires & Inner Tubes',
         ], $this->categories());
     }

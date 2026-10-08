@@ -7,7 +7,7 @@ use Tests\TestCase;
 
 class ProductCategoryTest extends TestCase
 {
-    public function test_dropdown_list_is_the_nine_canonical_categories(): void
+    public function test_dropdown_list_is_the_ten_canonical_categories(): void
     {
         $this->assertSame([
             'Bearings',
@@ -18,6 +18,7 @@ class ProductCategoryTest extends TestCase
             'Fasteners & Hardware',
             'Lubricants & Maintenance',
             'Mirrors & Accessories',
+            'Suspension & Steering',
             'Tires & Inner Tubes',
         ], ProductCategory::ALL);
     }
@@ -47,6 +48,34 @@ class ProductCategoryTest extends TestCase
     }
 
     /**
+     * The exact aliases the Master Products report listed as separate
+     * dropdown options. Each group must land on one canonical value.
+     */
+    public function test_master_products_legacy_aliases_collapse_to_one_category(): void
+    {
+        foreach (['Tire', 'Tires', 'Tires & Inner Tubes'] as $from) {
+            $this->assertSame(ProductCategory::TIRES, ProductCategory::resolve($from), $from);
+        }
+
+        $this->assertSame(ProductCategory::ENGINE, ProductCategory::resolve('Engine Part'));
+        $this->assertSame(ProductCategory::ELECTRICAL, ProductCategory::resolve('Electrical'));
+        $this->assertSame(ProductCategory::SUSPENSION, ProductCategory::resolve('Rear Shock Absorber'));
+
+        foreach (['Maintenance Sprays', 'Cleaning Supplies', 'Spray Paint / Maintenance'] as $from) {
+            $this->assertSame(ProductCategory::LUBRICANTS, ProductCategory::resolve($from), $from);
+        }
+
+        // canonicalise() is what the normalisation migration runs, so it has
+        // to recognise the same aliases rather than returning null.
+        foreach (['Tire', 'Engine Part', 'Electrical', 'Rear Shock Absorber',
+                  'Cleaning Supplies', 'Spray Paint / Maintenance'] as $from) {
+            $this->assertNotNull(ProductCategory::canonicalise($from), $from);
+        }
+
+        $this->assertSame(ProductCategory::SUSPENSION, ProductCategory::canonicalise('rear shock absorber'));
+    }
+
+    /**
      * Selecting "Bearings" has to return NTN, KOYO and generic bearings
      * together, i.e. the grouping ignores brand entirely.
      */
@@ -70,6 +99,7 @@ class ProductCategoryTest extends TestCase
             ProductCategory::FASTENERS     => 'Bolt',
             ProductCategory::LUBRICANTS    => 'Engine Oil',
             ProductCategory::ACCESSORIES   => 'Mirror',
+            ProductCategory::SUSPENSION    => 'Rear Shock Absorber',
             ProductCategory::TIRES         => 'Tire',
         ];
 

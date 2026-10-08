@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Inventory;
 use App\Models\Branch;
 use App\Models\CategorySize;
+use App\Support\ProductCategory;
 
 class ProductController extends Controller
 {
@@ -50,7 +51,12 @@ class ProductController extends Controller
             $totalInventoryValue += $totalStock * $product->price;
         }
 
-        return view('products.index', compact('products', 'branches', 'totalInventoryValue', 'isMainBranch'));
+        // Category filter options, normalised in one place (see
+        // ProductCategory::options) so a legacy alias can never show up as
+        // its own option.
+        $categories = ProductCategory::options($products->pluck('category'));
+
+        return view('products.index', compact('products', 'branches', 'categories', 'totalInventoryValue', 'isMainBranch'));
     }
 
     /**

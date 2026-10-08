@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Branch;
 use App\Models\Product;
+use App\Support\ProductCategory;
 
 class MonitorController extends Controller
 {
@@ -16,12 +17,15 @@ class MonitorController extends Controller
 
         $branches = Branch::with('inventories.product')->get();
         $totalProducts = Product::count();
-        $categories = Product::query()
-            ->whereNotNull('type')
-            ->where('type', '!=', '')
-            ->distinct()
-            ->orderBy('type')
-            ->pluck('type');
+
+        // `category`, not `type`: type doubles as a variant/size code, so a
+        // DISTINCT type rebuilt the fragmented dropdown this page used to
+        // show. Restricted to stocked products (all this page can display)
+        // and normalised through ProductCategory::options so the server list
+        // always matches what stockData() sends the client.
+        $categories = ProductCategory::options(
+            Product::query()->whereHas('inventories')->distinct()->pluck('category')
+        );
 
         return view('monitor.index', compact('branches', 'totalProducts', 'categories'));
     }
@@ -41,7 +45,7 @@ class MonitorController extends Controller
                     'product_name'  => $inv->product->name ?? 'Unknown',
                     'serial_number' => $inv->product->serial_number ?? '',
                     'brand'         => $inv->product->brand ?? '',
-                    'category'      => $inv->product->type ?? '',
+                    'category'      => $inv->product->category ?? '',
                     'quantity'      => (int) $inv->quantity,
                     'price'         => $inv->product->price ?? 0,
                     'status'        => $inv->quantity <= 0 ? 'out_of_stock' : ($inv->quantity <= 5 ? 'low_stock' : 'in_stock'),

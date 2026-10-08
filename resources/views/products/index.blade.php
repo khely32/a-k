@@ -3,17 +3,21 @@
 @section('content')
 
 @php
-function productColorHex($name)
-{
-    $map = [
-        'red' => '#ef4444', 'blue' => '#3b82f6', 'black' => '#111827', 'white' => '#f8fafc',
-        'green' => '#22c55e', 'yellow' => '#eab308', 'orange' => '#f97316', 'purple' => '#a855f7',
-        'pink' => '#ec4899', 'gray' => '#6b7280', 'grey' => '#6b7280', 'silver' => '#cbd5e1',
-        'brown' => '#92400e', 'gold' => '#eab308', 'chrome' => '#d1d5db'
-    ];
-    $key = strtolower(trim((string) $name));
-    foreach ($map as $word => $hex) { if (str_contains($key, $word)) return $hex; }
-    return '#334155';
+// Guarded: the view can be rendered more than once in a single PHP process
+// (tests, queued renders, Octane), which would otherwise fatal on redeclare.
+if (! function_exists('productColorHex')) {
+    function productColorHex($name)
+    {
+        $map = [
+            'red' => '#ef4444', 'blue' => '#3b82f6', 'black' => '#111827', 'white' => '#f8fafc',
+            'green' => '#22c55e', 'yellow' => '#eab308', 'orange' => '#f97316', 'purple' => '#a855f7',
+            'pink' => '#ec4899', 'gray' => '#6b7280', 'grey' => '#6b7280', 'silver' => '#cbd5e1',
+            'brown' => '#92400e', 'gold' => '#eab308', 'chrome' => '#d1d5db'
+        ];
+        $key = strtolower(trim((string) $name));
+        foreach ($map as $word => $hex) { if (str_contains($key, $word)) return $hex; }
+        return '#334155';
+    }
 }
 $bc = [8=>'#10B981',9=>'#06B6D4',10=>'#F59E0B',11=>'#8B5CF6'];
 $ba = [];
@@ -170,10 +174,10 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
                     <i class="bi bi-search position-absolute" style="left:20px;top:50%;transform:translateY(-50%);color:var(--accent);opacity:.5;"></i>
                 </div>
                 <div class="col-md-3">
-                    <select id="typeFilter" class="form-select" style="border-radius:10px;">
-                        <option value="">All Types</option>
-                        @foreach($products->pluck('type')->unique()->filter()->values() as $type)
-                        <option value="{{ $type }}">{{ $type }}</option>
+                    <select id="categoryFilter" class="form-select" style="border-radius:10px;">
+                        <option value="">All Categories</option>
+                        @foreach($categories as $category)
+                        <option value="{{ $category }}">{{ $category }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -203,7 +207,7 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
                         <th class="py-3 ps-4" style="color:#22D3EE;font-weight:700;font-size:.75rem;">SKU</th>
                         <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Part Description</th>
                         <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Brand</th>
-                        <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Type</th>
+                        <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Category</th>
                         <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Color</th>
                         <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Size</th>
                         <th class="py-3" style="color:#22D3EE;font-weight:700;font-size:.75rem;">Price</th>
@@ -221,12 +225,12 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
                     <tr class="product-row" style="background:#0B1120;border-bottom:1px solid rgba(30,41,59,0.6);"
                         data-name="{{ strtolower($product->name) }}"
                         data-brand="{{ strtolower($product->brand ?? '') }}"
-                        data-type="{{ strtolower($product->type ?? '') }}"
+                        data-category="{{ strtolower($product->category ?? '') }}"
                         data-serial="{{ strtolower($product->serial_number) }}">
                         <td class="ps-4 fw-bold" style="font-family:monospace;color:#22D3EE;font-size:.82rem;">{{ $product->serial_number }}</td>
                         <td class="fw-semibold" style="color:#fff;font-size:.85rem;">{{ $product->name }}</td>
                         <td><span class="badge" style="background:#1E293B;color:#CBD5E1;border:1px solid #334155;font-weight:600;font-size:.72rem;">{{ $product->brand ?? 'N/A' }}</span></td>
-                        <td><span class="badge" style="background:#1E293B;color:#CBD5E1;border:1px solid #334155;font-weight:600;font-size:.72rem;">{{ $product->type ?? 'Uncategorized' }}</span></td>
+                        <td><span class="badge" style="background:#1E293B;color:#CBD5E1;border:1px solid #334155;font-weight:600;font-size:.72rem;">{{ $product->category ?? 'Uncategorized' }}</span></td>
                         <td>
                             @if($product->color)
                             <span style="display:inline-flex;align-items:center;gap:4px;color:#94A3B8;font-size:.82rem;">
@@ -429,27 +433,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // Search and Filtering Code
     // ----------------------------------------------------
     const searchInput = document.getElementById('searchInput');
-    const typeFilter = document.getElementById('typeFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
     const brandFilter = document.getElementById('brandFilter');
     const clearFilters = document.getElementById('clearFilters');
     const rows = document.querySelectorAll('.product-row');
 
     function filterTable() {
         const query = searchInput.value.toLowerCase().trim();
-        const selectedType = typeFilter.value.toLowerCase();
-        const selectedBrand = brandFilter.value.toLowerCase();
+        const selectedCategory = (categoryFilter.value || '').toLowerCase().trim();
+        const selectedBrand = (brandFilter.value || '').toLowerCase().trim();
 
         rows.forEach(row => {
             const name = row.getAttribute('data-name');
             const brand = row.getAttribute('data-brand');
-            const type = row.getAttribute('data-type');
+            const category = row.getAttribute('data-category');
             const serial = row.getAttribute('data-serial');
 
-            const matchesSearch = name.includes(query) || brand.includes(query) || type.includes(query) || serial.includes(query);
-            const matchesType = !selectedType || type === selectedType;
+            const matchesSearch = name.includes(query) || brand.includes(query) || category.includes(query) || serial.includes(query);
+            const matchesCategory = !selectedCategory || category === selectedCategory;
             const matchesBrand = !selectedBrand || brand === selectedBrand;
 
-            if (matchesSearch && matchesType && matchesBrand) {
+            if (matchesSearch && matchesCategory && matchesBrand) {
                 row.classList.remove('d-none');
             } else {
                 row.classList.add('d-none');
@@ -458,13 +462,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (searchInput) searchInput.addEventListener('input', filterTable);
-    if (typeFilter) typeFilter.addEventListener('change', filterTable);
+    if (categoryFilter) categoryFilter.addEventListener('change', filterTable);
     if (brandFilter) brandFilter.addEventListener('change', filterTable);
 
     if (clearFilters) {
         clearFilters.addEventListener('click', function() {
             searchInput.value = '';
-            typeFilter.value = '';
+            categoryFilter.value = '';
             brandFilter.value = '';
             filterTable();
         });

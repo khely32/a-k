@@ -5,9 +5,9 @@ namespace App\Support;
 /**
  * Single source of truth for the product category taxonomy.
  *
- * The POS dropdown, the DB column, the backfill migration and the Product
- * model all read from this class so a category can never be spelled two
- * different ways in two different places.
+ * The POS and Master Products dropdowns, the DB column, the backfill
+ * migrations and the Product model all read from this class so a category
+ * can never be spelled two different ways in two different places.
  *
  * `products.type` is deliberately left alone: it doubles as a variant/size
  * code (e.g. "Std", "C1", "0.25", "Std Piston (13011-K60-T00)") and feeds
@@ -24,6 +24,7 @@ class ProductCategory
     public const FASTENERS = 'Fasteners & Hardware';
     public const LUBRICANTS = 'Lubricants & Maintenance';
     public const ACCESSORIES = 'Mirrors & Accessories';
+    public const SUSPENSION = 'Suspension & Steering';
     public const TIRES = 'Tires & Inner Tubes';
 
     public const ALL = [
@@ -35,6 +36,7 @@ class ProductCategory
         self::FASTENERS,
         self::LUBRICANTS,
         self::ACCESSORIES,
+        self::SUSPENSION,
         self::TIRES,
     ];
 
@@ -57,16 +59,25 @@ class ProductCategory
      *  - engine "filter" before lubricants, so "Oil Filter" is Engine Parts
      *  - lubricants before engine, so "Engine Oil" is not Engine Parts
      *  - lubricants before drive train, so "Chain Lube" is not Drive Train
+     *  - suspension after bearings, so "Steering Bearing" stays Bearings
+     *  - suspension before lubricants, so "Rear Shock Absorber Oil" is not
+     *    filed as a lubricant (a bare "Fork Oil" carries no suspension
+     *    keyword and still lands in Lubricants & Maintenance)
      */
     private const RULES = [
         [self::BEARINGS, ['bearing']],
         [self::ACCESSORIES, ['accessor', 'mirror', 'grip', 'fairing', 'seat cover']],
         [self::BRAKE, ['brake', 'lever', 'master cylinder', 'disc', 'rotor']],
         [self::TIRES, ['tire', 'tyre', 'tube', 'rim', 'wheel']],
+        [self::SUSPENSION, [
+            'shock', 'absorber', 'suspension', 'steering', 'swing arm',
+            'swingarm', 'ball joint', 'tie rod',
+        ]],
         [self::ENGINE, ['filter']],
         [self::LUBRICANTS, [
             'oil', 'lubricant', 'lube', 'grease', 'coolant', 'sealant',
-            'spray', 'maintenance', 'atf', 'additive', 'fluid',
+            'spray', 'maintenance', 'cleaning', 'cleaner', 'atf', 'additive',
+            'fluid',
         ]],
         [self::DRIVE_TRAIN, [
             'chain', 'sprocket', 'clutch', 'roller weight', 'drive belt',
@@ -124,7 +135,7 @@ class ProductCategory
     }
 
     /**
-     * True when $value is one of the nine canonical categories.
+     * True when $value is one of the canonical categories.
      */
     public static function isValid(?string $value): bool
     {
@@ -154,6 +165,27 @@ class ProductCategory
         // match() returns null when nothing matched, so an unknown string
         // stays unknown rather than being silently filed under the fallback.
         return $resolved;
+    }
+
+    /**
+     * Turn raw stored category values into dropdown options.
+     *
+     * Each value is canonicalised (so a legacy alias never reaches the UI),
+     * trimmed, deduplicated case-insensitively and sorted - otherwise a
+     * column holding "Tire" and "tires" renders as two separate options.
+     *
+     * @param  iterable<int, mixed>  $values
+     * @return list<string>
+     */
+    public static function options(iterable $values): array
+    {
+        return collect($values)
+            ->map(fn ($value) => static::canonicalise($value) ?? trim((string) $value))
+            ->filter(fn ($value) => $value !== '')
+            ->unique(fn ($value) => mb_strtolower($value))
+            ->sort()
+            ->values()
+            ->all();
     }
 
     private static function matches(string $haystack, string $pattern): bool
