@@ -18,7 +18,7 @@ class DailyIncomeSeeder extends Seeder
 
     protected const VAT_RATE = 0.12;
 
-    protected const PAYMENT_METHODS = ['cash', 'cash', 'cash', 'gcash'];
+    protected const PAYMENT_METHODS = ['cash'];
 
     protected const SALES_PER_DAY = [
         'main'    => [5, 10],

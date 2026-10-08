@@ -93,7 +93,6 @@
                     <label for="payment-method">Payment Method</label>
                     <select id="payment-method" class="neo-select">
                         <option value="cash">Cash</option>
-                        <option value="gcash">GCash</option>
                     </select>
                 </div>
 
