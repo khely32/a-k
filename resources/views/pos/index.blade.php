@@ -97,17 +97,6 @@
                     </select>
                 </div>
 
-                <!-- GCash QR (compact) -->
-                <div id="gcash-qr-section" class="gcash-box">
-                    <div style="font-size:1.8rem;">📱</div>
-                    <div class="fw-bold" style="color:#39ff14;">Scan to Pay via GCash</div>
-                    <div id="gcash-qr-placeholder"
-                         style="width:120px;height:120px;margin:10px auto;border:2px solid rgba(0,229,255,.3);border-radius:10px;background:white;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#0f172a;">
-                        <div style="font-size:1.6rem;">📱</div>
-                        <div style="font-size:0.7rem;font-weight:700;">GCash QR</div>
-                    </div>
-                </div>
-
                 <!-- Actions -->
                 <button id="checkout-btn" class="console-btn btn-green">
                     <i class="bi bi-check2-circle"></i> Finalize Order
@@ -536,16 +525,6 @@
     }
     .console-btn:active{ transform:scale(.98); }
 
-    .gcash-box{
-        display:none;
-        text-align:center;
-        padding:12px;
-        border:1px dashed rgba(0,242,254,.35);
-        border-radius:14px;
-        background:rgba(0,242,254,.04);
-    }
-    .gcash-box.show{ display:block; }
-
     /* ---------- SCROLLBARS ---------- */
     .pos-product-list::-webkit-scrollbar,
     .cart-items::-webkit-scrollbar{ width:6px; }
@@ -724,14 +703,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    /* ---------------- PAYMENT METHOD / QR ---------------- */
+    /* ---------------- PAYMENT METHOD ---------------- */
     const paymentSelect = $('payment-method');
-    const qrSection = $('gcash-qr-section');
-    function toggleGcashQr(){
-        qrSection.classList.toggle('show', paymentSelect.value === 'gcash');
-    }
-    paymentSelect.addEventListener('change', toggleGcashQr);
-    toggleGcashQr();
 
     /* ---------------- SEARCH / FILTER ---------------- */
     let searchTimer;
