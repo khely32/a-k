@@ -77,10 +77,14 @@ class PosController extends Controller
     // 🗂 CATEGORIES (for the filter dropdown)
     public function categories()
     {
-        // Fixed taxonomy rather than SELECT DISTINCT type: distinct `type`
-        // values are unbounded (variant codes leak in) and were the direct
-        // cause of the duplicated dropdown entries.
-        return response()->json(ProductCategory::ALL);
+        // Grown from the stored categories, so anything the owner typed as a
+        // new type is filterable as soon as it is saved - while `type`'s
+        // variant codes and legacy aliases are still normalised away.
+        return response()->json(
+            ProductCategory::options(
+                Product::query()->whereNotNull('category')->pluck('category')
+            )
+        );
     }
 
     // ✅ ADD TO CART

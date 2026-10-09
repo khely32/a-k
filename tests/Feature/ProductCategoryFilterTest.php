@@ -171,4 +171,21 @@ class ProductCategoryFilterTest extends TestCase
 
         $this->assertNull($unmatched->fresh()->part_family);
     }
+
+    /**
+     * Saving a product with a brand-new type makes that type suggested on
+     * the add form too, so the owner can pick it right back next time.
+     */
+    public function test_newly_typed_category_is_suggested_on_the_add_form(): void
+    {
+        $product = $this->addProduct('Custom Seat Foam', 'Seats & Upholstery');
+        $this->assertSame('Seats & Upholstery', $product->category);
+
+        $html = $this->actingAs($this->user)->get('/products/create')->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/<datalist id="categoryList">.*?option value="Seats &amp; Upholstery".*?<\/datalist>/s',
+            $html
+        );
+    }
 }

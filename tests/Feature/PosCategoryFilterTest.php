@@ -79,30 +79,30 @@ class PosCategoryFilterTest extends TestCase
         return $response->json();
     }
 
-    public function test_dropdown_returns_the_fixed_categories(): void
+    public function test_dropdown_lists_the_categories_in_stock(): void
     {
         $this->addProduct('4T Engine Oil', 'Motor Oil / Lubricants');
+        $this->addProduct('Brembo Brake Pad', 'Brake System');
+        $this->addProduct('Motorcycle Tire', 'Tire');
 
         $this->assertSame([
-            'Bearings',
-            'Body & Fairings',
             'Brake System',
-            'Cooling System',
-            'Drive Train & Transmission',
-            'Electrical & Lighting',
-            'Engine Parts',
-            'Exhaust & Emissions',
-            'Fasteners & Hardware',
-            'Frame & Chassis',
-            'Fuel System & Air Intake',
-            'Handlebars & Controls',
-            'Instrumentation & Gauges',
             'Lubricants & Maintenance',
-            'Mirrors & Accessories',
-            'Suspension & Steering',
             'Tires & Inner Tubes',
-            'Wheels & Rims',
         ], $this->categories());
+    }
+
+    /**
+     * Saving a product whose type no rule knows promotes that type to its
+     * own category, and it is offered / filterable right away.
+     */
+    public function test_a_brand_new_type_appears_as_a_category(): void
+    {
+        $product = $this->addProduct('Universal Mounting Clamp', 'Seats & Upholstery');
+        $this->assertSame('Seats & Upholstery', $product->category);
+
+        $this->assertSame(['Seats & Upholstery'], $this->categories());
+        $this->assertCount(1, $this->search('Seats & Upholstery'));
     }
 
     /**

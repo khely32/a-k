@@ -65,8 +65,7 @@
                         <input type="text" name="type" class="form-control @error('type') is-invalid @enderror"
                                value="{{ old('type') }}" placeholder="e.g., Accessories, Lubricants" list="categoryList" required>
                         <datalist id="categoryList">
-                            @php $categories = \App\Models\CategorySize::distinct()->orderBy('category')->pluck('category'); @endphp
-                            @foreach($categories as $cat)
+                            @foreach(\App\Support\ProductCategory::typeSuggestions() as $cat)
                                 <option value="{{ $cat }}">
                             @endforeach
                         </datalist>

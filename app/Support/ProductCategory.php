@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\CategorySize;
+use App\Models\Product;
+
 /**
  * Single source of truth for the product category taxonomy.
  *
@@ -60,8 +63,10 @@ class ProductCategory
      * Where a product lands when nothing in its type/name matches a rule.
      *
      * NULL would hide the item from every single-category view, so an
-     * uncategorised part is parked in the broadest bucket instead. Products
-     * resolved this way are reported by the backfill so they can be reviewed.
+     * uncategorised part is parked in the broadest bucket instead. Only
+     * resolve() and its callers that need a guaranteed-canonical result use
+     * this; new saves go through resolveDynamic() so a brand-new type the
+     * owner typed becomes its own category instead.
      */
     public const FALLBACK = self::ACCESSORIES;
 
@@ -139,6 +144,52 @@ class ProductCategory
     public static function resolve(?string $type, ?string $name = null): string
     {
         return static::match($type, $name) ?? static::FALLBACK;
+    }
+
+    /**
+     * The save-time variant: a type that matches no rule becomes its own
+     * category (stored verbatim) instead of the fallback bucket, so the
+     * owner's real groups show up in the dynamic dropdowns automatically.
+     * Only a blank type falls back.
+     */
+    public static function resolveDynamic(?string $type, ?string $name = null): string
+    {
+        $resolved = static::match($type, $name);
+
+        if ($resolved !== null) {
+            return $resolved;
+        }
+
+        $type = is_string($type) ? trim((string) $type) : '';
+
+        // Codes like "0.25" and stray symbols are variant/size values, not
+        // categories - they keep falling back. Anything with a letter in it
+        // reads like a real group, so it becomes one.
+        if ($type !== '' && preg_match('/[a-z]/i', $type) === 1) {
+            return trim(preg_replace('/\s+/', ' ', $type));
+        }
+
+        return static::FALLBACK;
+    }
+
+    /**
+     * What a type field should suggest: the curated `category_sizes` groups,
+     * the canonical groups, and any category already stored on a product -
+     * so a brand-new type becomes suggestible the moment its first product
+     * exists, without ever showing `type`'s variant codes.
+     *
+     * @return list<string>
+     */
+    public static function typeSuggestions(): array
+    {
+        return collect(static::ALL)
+            ->merge(CategorySize::query()->distinct()->orderBy('category')->pluck('category'))
+            ->merge(Product::query()->whereNotNull('category')->distinct()->pluck('category'))
+            ->filter(fn ($value) => trim((string) $value) !== '')
+            ->unique(fn ($value) => mb_strtolower(trim((string) $value)))
+            ->sort()
+            ->values()
+            ->all();
     }
 
     /**

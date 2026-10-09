@@ -217,6 +217,35 @@ class ProductCategoryTest extends TestCase
     }
 
     /**
+     * Save-time resolution promotes a type no rule knows to its own
+     * category, which is what makes the dashboard dropdowns grow. Codes and
+     * blanks still fall back, and resolve() keeps its normalising contract.
+     */
+    public function test_unmatched_type_becomes_its_own_category_on_save(): void
+    {
+        $this->assertSame(
+            'Seats & Upholstery',
+            ProductCategory::resolveDynamic('Seats & Upholstery', 'Custom Seat Foam')
+        );
+        $this->assertSame(
+            'Harnesses And Brackets',
+            ProductCategory::resolveDynamic('  Harnesses   And Brackets  ')
+        );
+        $this->assertSame(
+            ProductCategory::BRAKE,
+            ProductCategory::resolveDynamic('Brake System', 'Brembo Pad')
+        );
+        $this->assertSame(ProductCategory::FALLBACK, ProductCategory::resolveDynamic('', 'Click 125'));
+        $this->assertSame(ProductCategory::FALLBACK, ProductCategory::resolveDynamic('0.25'));
+        $this->assertSame(ProductCategory::FALLBACK, ProductCategory::resolveDynamic(null, null));
+
+        $this->assertSame(
+            ProductCategory::FALLBACK,
+            ProductCategory::resolve('Seats & Upholstery', 'Custom Seat Foam')
+        );
+    }
+
+    /**
      * A part number in `type` must not defeat a real category in the name.
      */
     public function test_part_numbers_do_not_break_resolution(): void

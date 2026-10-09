@@ -24,10 +24,12 @@ class InventoryController extends Controller
             ->orderBy('products.id', 'asc')
             ->get();
 
-        // Fixed taxonomy instead of distinct `type`: `type` doubles as a
-        // variant/size code, so it produced the same redundant entries the
-        // POS dropdown used to show.
-        $categories = ProductCategory::ALL;
+        // The dropdown follows the stored categories, so a brand-new type
+        // saved by the owner shows up as a filter the moment it exists -
+        // without letting `type`'s variant codes leak in as entries.
+        $categories = ProductCategory::options(
+            Product::query()->whereNotNull('category')->pluck('category')
+        );
 
         return view('inventory.index', compact('user', 'products', 'categories'));
     }

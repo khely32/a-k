@@ -6,7 +6,6 @@ use App\Models\Branch;
 use App\Models\Inventory;
 use App\Models\Product;
 use App\Models\User;
-use App\Support\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -57,10 +56,11 @@ class InventoryCategoryFilterTest extends TestCase
     }
 
     /**
-     * The dropdown used to be DISTINCT type, so variant codes and spelling
-     * variants leaked in as selectable "categories".
+     * The dropdown follows the stored categories (via ProductCategory::options),
+     * so legacy type spellings and variant codes never become entries while
+     * the resolved groups always are.
      */
-    public function test_dropdown_offers_only_the_canonical_categories(): void
+    public function test_dropdown_offers_resolved_categories_only(): void
     {
         $this->addProduct('Shell Helix HX3', 'Motor Oil / Lubricants');
         $this->addProduct('4T Engine Oil', 'Lubricant');
@@ -81,7 +81,7 @@ class InventoryCategoryFilterTest extends TestCase
 
         // Blade HTML-escapes `&`, so compare against the escaped form.
         $this->assertSame(
-            array_merge([''], array_map('e', ProductCategory::ALL)),
+            ['', 'Bearings', 'Lubricants &amp; Maintenance'],
             $options[1]
         );
 
@@ -91,6 +91,25 @@ class InventoryCategoryFilterTest extends TestCase
         foreach (['Motor Oil / Lubricants', 'Lubricant', 'Lubricants / Gear Oil', 'Std'] as $legacy) {
             $this->assertNotContains($legacy, $decoded);
         }
+    }
+
+    /**
+     * A brand-new type grows the dropdown the moment its product is saved:
+     * the category is stored verbatim and offered as a filter.
+     */
+    public function test_a_brand_new_type_grows_the_dropdown(): void
+    {
+        $product = $this->addProduct('Custom Seat Foam', 'Seats & Upholstery');
+
+        $this->assertSame('Seats & Upholstery', $product->category);
+
+        $html = $this->actingAs($this->user)->get('/inventory')->assertOk()->getContent();
+
+        $this->assertStringContainsString(
+            '<option value="Seats &amp; Upholstery">Seats &amp; Upholstery</option>',
+            $html
+        );
+        $this->assertStringContainsString('data-category="seats &amp; upholstery"', $html);
     }
 
     public function test_rows_carry_the_canonical_category_for_client_side_filtering(): void

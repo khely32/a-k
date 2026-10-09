@@ -42,7 +42,7 @@ class Product extends Model
             // keep a stale grouping, otherwise trust (but re-spell) what we
             // were given.
             if ($product->isDirty('type') || ! ProductCategory::isValid($category)) {
-                $product->category = ProductCategory::resolve($product->type, $product->name);
+                $product->category = ProductCategory::resolveDynamic($product->type, $product->name);
             } else {
                 $product->category = ProductCategory::canonicalise($category) ?? $category;
             }

@@ -149,8 +149,7 @@
                            value="{{ old('type', $product->type) }}" list="categoryList" required
                            placeholder="e.g., Brake, Engine, Electrical">
                     <datalist id="categoryList">
-                        @php $categories = \App\Models\CategorySize::distinct()->orderBy('category')->pluck('category'); @endphp
-                        @foreach($categories as $cat)
+                        @foreach(\App\Support\ProductCategory::typeSuggestions() as $cat)
                             <option value="{{ $cat }}">
                         @endforeach
                     </datalist>
