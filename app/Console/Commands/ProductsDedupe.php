@@ -4,10 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Product;
-use App\Models\Inventory;
-use App\Models\SaleItem;
-use App\Models\StockTransfer;
-use App\Models\ProductMergeLog;
+use App\Support\ProductMerger;
 use Illuminate\Support\Facades\DB;
 
 class ProductsDedupe extends Command
@@ -67,40 +64,8 @@ class ProductsDedupe extends Command
                         continue;
                     }
 
-                    $inventoriesMerged = 0;
-                    foreach ($dup->inventories as $inv) {
-                        $target = Inventory::firstOrNew([
-                            'product_id' => $canonical->id,
-                            'branch_id'  => $inv->branch_id,
-                        ]);
-                        $target->quantity = ($target->exists ? (int) $target->quantity : 0) + (int) $inv->quantity;
-                        $target->save();
-                        $inventoriesMerged++;
-                    }
-
-                    $saleItems = SaleItem::where('product_id', $dup->id)->update(['product_id' => $canonical->id]);
-                    $transfers = StockTransfer::where('product_id', $dup->id)->update(['product_id' => $canonical->id]);
-
-                    $canonical->quantity = (int) $canonical->quantity + (int) $dup->quantity;
-
-                    // The duplicate row is about to disappear, so record where
-                    // its serial number went before that happens.
-                    ProductMergeLog::create([
-                        'canonical_product_id'      => $canonical->id,
-                        'canonical_serial_number'   => $canonical->serial_number,
-                        'merged_product_id'         => $dup->id,
-                        'merged_serial_number'      => $dup->serial_number,
-                        'inventories_merged'        => $inventoriesMerged,
-                        'sale_items_repointed'      => $saleItems,
-                        'stock_transfers_repointed' => $transfers,
-                    ]);
-
-                    $dup->delete();
+                    ProductMerger::merge($canonical, $dup);
                     $merged++;
-                }
-
-                if (!$this->option('dry-run')) {
-                    $canonical->save();
                 }
             }
 
