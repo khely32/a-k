@@ -15,9 +15,9 @@
             <i class="bi bi-cash-register me-2" style="color:var(--green);"></i>POS Transaction Desk
         </h2>
         <p class="mb-0" style="font-size:0.9rem;color:#FFFFFF;">
-            <span style="color:#9CA3AF;">Cashier:</span> <span style="color:var(--accent);font-weight:700;">{{ auth()->user()->name }}</span>
+            <span style="color:#9CA3AF;">Cashier:</span> <span style="color:var(--accent);font-weight:700;">{{ \App\Support\DesignatedCashier::forBranchName(auth()->user()->branchDisplayName()) ?? auth()->user()->name }}</span>
             <span style="color:#9CA3AF;">&nbsp;|&nbsp;</span>
-            <span style="color:#9CA3AF;">Branch:</span> <span style="color:var(--accent);font-weight:700;">{{ auth()->user()->branchLabel() }}</span>
+            <span style="color:#9CA3AF;">Branch:</span> <span style="color:var(--accent);font-weight:700;">{{ auth()->user()->branchDisplayName() }}</span>
         </p>
     </div>
 

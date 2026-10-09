@@ -235,4 +235,48 @@ class PosCategoryFilterTest extends TestCase
         $this->assertSame('Std', $product->fresh()->type);
         $this->assertNotNull($product->fresh()->category);
     }
+
+    /**
+     * The header names the designated cashier of the branch currently being
+     * served, not whoever happens to be logged in.
+     */
+    public function test_header_shows_the_branchs_designated_cashier(): void
+    {
+        $html = $this->actingAs($this->user)->get('/pos')->assertOk()->getContent();
+
+        $this->assertStringContainsString(
+            '>Irish Sarmiento Deano</span>',
+            $html
+        );
+        $this->assertStringContainsString(
+            'Branch:</span> <span style="color:var(--accent);font-weight:700;">Moroboro Branch</span>',
+            $html
+        );
+    }
+
+    /**
+     * An unmapped branch falls back to the logged-in user's name so the
+     * header never reads a blank cashier.
+     */
+    public function test_unmapped_branch_falls_back_to_the_logged_in_user(): void
+    {
+        $lapaz = Branch::create([
+            'branch_name' => 'Lapaz Branch',
+            'location'    => 'Lapaz, Ilo-ilo',
+            'is_active'   => true,
+        ]);
+
+        $user = User::create([
+            'name'     => 'Lulu',
+            'email'    => 'lulu@example.com',
+            'password' => bcrypt('secret'),
+            'role'     => 'cashier',
+            'branch_id'=> $lapaz->id,
+        ]);
+
+        $html = $this->actingAs($user)->get('/pos')->assertOk()->getContent();
+
+        $this->assertStringContainsString('>Lulu</span>', $html);
+        $this->assertStringContainsString('>Lapaz Branch</span>', $html);
+    }
 }
