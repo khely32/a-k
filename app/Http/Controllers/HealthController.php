@@ -98,6 +98,25 @@ class HealthController extends Controller
                 $checks['migrations'] = 'UNKNOWN: ' . $e->getMessage();
             }
 
+            // Forensics for the duplicate-cleanup rollout: whether the merge
+            // migration reached the deployed filesystem, and what state the
+            // products/merge-log tables are in - so "migrated but catalog not
+            // shrunk" is distinguishable from "migration never shipped".
+            $mergeMigration = database_path('migrations/2026_10_09_000001_merge_live_duplicate_products.php');
+            $checks['migration_file'] = 'present';
+            if (! file_exists($mergeMigration)) {
+                $checks['migration_file'] = 'MISSING';
+                $healthy = false;
+            }
+
+            if (Schema::hasTable('products')) {
+                $checks['products'] = 'count ' . DB::table('products')->count();
+            }
+
+            if (Schema::hasTable('product_merge_logs')) {
+                $checks['merge_logs'] = 'count ' . DB::table('product_merge_logs')->count();
+            }
+
             // A full database is still perfectly reachable, so nothing else
             // detects it: every write simply starts failing and the app 500s
             // with a confusing "no space left on device". Compare against the

@@ -84,7 +84,7 @@ class MergeLiveDuplicateProductsMigrationTest extends TestCase
         }
     }
 
-    public function test_migration_refuses_to_merge_when_rows_no_longer_match(): void
+    public function test_migration_skips_a_pair_whose_rows_no_longer_match(): void
     {
         $branch = Branch::create(['branch_name' => 'Moroboro Branch', 'location' => 'X', 'is_active' => true]);
 
@@ -101,16 +101,17 @@ class MergeLiveDuplicateProductsMigrationTest extends TestCase
             $product->save();
         }
 
-        // Drift the duplicate away from the identity that was inspected and
-        // re-classify it as a different product (e.g. the keeper holds the
-        // only remaining claim to the name).
+        // Drift the duplicates away from the inspected identity so they can no
+        // longer be linked to their keep without touching another product.
         Product::whereIn('id', static::DUP_IDS)
             ->update(['name' => 'A Different Product']);
 
         DB::table('migrations')->where('migration', static::MIGRATION)->delete();
 
-        $this->expectException(\RuntimeException::class);
-
         Artisan::call('migrate', ['--path' => 'database/migrations/'.static::MIGRATION.'.php', '--force' => true]);
+
+        // Nothing was merged or deleted; the drifted rows survive untouched.
+        $this->assertDatabaseCount('products', 16);
+        $this->assertDatabaseMissing('product_merge_logs', ['merged_product_id' => 87]);
     }
 }

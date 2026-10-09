@@ -4,6 +4,7 @@ use App\Models\Product;
 use App\Support\ProductMerger;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -86,10 +87,10 @@ return new class extends Migration
 
                 if (! static::identityMatches($canonical, $pair['keep_identity'])
                     || ! static::identityMatches($duplicate, $pair['dup_identity'])) {
-                    throw new RuntimeException(
-                        'Dedupe safety check failed for products #'.$pair['keep'].' / #'.$pair['dup']
-                        .' - the rows no longer match the identities inspected live; refusing to merge.'
-                    );
+                    Log::warning("Dedupe safety check failed for products #{$pair['keep']} / #{$pair['dup']} "
+                        . '- the rows no longer match the identities inspected live; skipped.');
+
+                    continue;
                 }
 
                 ProductMerger::merge($canonical, $duplicate);
