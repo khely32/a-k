@@ -187,8 +187,8 @@
     }
     .stk-pill i { font-size: 0.55rem; }
     .stk-ok { background: rgba(16, 185, 129, 0.1); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.25); }
-    .stk-lo { background: rgba(251, 191, 36, 0.1); color: #FBBF24; border: 1px solid rgba(251, 191, 36, 0.3); }
-    .stk-0 { background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .stk-lo { background: #F59E0B; color: #111827; border: 1px solid #F59E0B; }
+    .stk-0 { background: #DC2626; color: #fff; border: 1px solid #DC2626; }
 
     .act-cell { text-align: right; white-space: nowrap; }
     .act-btn {
@@ -385,7 +385,7 @@
                         <td>
                             @if($product->display_quantity == 0)
                                 <span class="stk-pill stk-0"><i class="bi bi-circle-fill"></i> Out of Stock</span>
-                            @elseif($product->display_quantity <= 5)
+                            @elseif($product->display_quantity <= 10)
                                 <span class="stk-pill stk-lo"><i class="bi bi-circle-fill"></i> Low Stock</span>
                             @else
                                 <span class="stk-pill stk-ok"><i class="bi bi-circle-fill"></i> In Stock</span>
