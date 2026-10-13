@@ -28,15 +28,15 @@ foreach ($branches as $b) {
     $ba[$b->id] = $a ?: strtoupper(substr($b->branch_name,0,5));
 }
 $ls = 0; $os = 0;
-foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$br->id] ?? 0; if ($q==0) $os++; elseif ($q<=5) $ls++; } }
+foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$br->id] ?? 0; if ($q == 0) $os++; elseif ($q <= 10) $ls++; } }
 @endphp
 
 <style>
     .bc-hdr{text-align:center!important;font-size:.72rem!important;letter-spacing:.04em;min-width:85px;white-space:nowrap;}
     .bc-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle;}
     .stk{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.72rem;font-weight:700;min-width:42px;text-align:center;}
-    .stk-0{background:rgba(30,41,59,.8);color:#64748B;border:1px solid #334155;}
-    .stk-lo{background:rgba(16,185,129,.1);color:#34D399;border:1px solid rgba(16,185,129,.3);}
+    .stk-0{background:#DC2626;color:#fff;border:1px solid #DC2626;}
+    .stk-lo{background:#F59E0B;color:#111827;border:1px solid #F59E0B;}
     .stk-ok{background:rgba(16,185,129,.1);color:#34D399;border:1px solid rgba(16,185,129,.3);}
     #productsTable th,#productsTable td{white-space:nowrap;}
     #productsTable{--bs-table-bg:transparent!important;--bs-table-hover-bg:transparent!important;}
@@ -257,7 +257,7 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
                         <td style="text-align:center;">
                             @if($qty == 0)
                             <span class="stk stk-0">0</span>
-                            @elseif($qty <= 5)
+                            @elseif($qty <= 10)
                             <span class="stk stk-lo">{{ $qty }}</span>
                             @else
                             <span class="stk stk-ok">{{ $qty }}</span>
