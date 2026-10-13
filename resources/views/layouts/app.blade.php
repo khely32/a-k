@@ -5,15 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
-        // Live 5-second auto-refresh across the admin & branch panels. Pages
-        // that would lose partially-entered work on a reload (create/edit
-        // forms, POS checkout, auth flows) are excluded.
+        // Smart 5-second live refresh. Pages that run on multi-step input
+        // (POS checkout, create/edit forms, auth flows, inventory panel) are
+        // server-excluded: they never reload, only keep the instance warm.
+        // Everywhere else a JavaScript watcher reloads the page every 5s but
+        // holds off while the user is typing, has a modal open, or is actively
+        // clicking, so the refresh never stomps on work in progress.
         $refreshExcluded = [
             'pos.index',
             'products.create', 'products.edit',
             'users.create', 'users.edit',
             'branches.create', 'branches.edit',
-            'inventory.create',
+            'inventory.index', 'inventory.create',
             'transfers.create',
             'profile.edit',
             'register',
@@ -21,9 +24,89 @@
         ];
         $autoRefresh = ! in_array(\Illuminate\Support\Facades\Route::currentRouteName(), $refreshExcluded, true);
     @endphp
-    @if ($autoRefresh)
-        <meta http-equiv="refresh" content="5">
-    @endif
+    <script>window.AK_AUTO_REFRESH = {{ $autoRefresh ? 'true' : 'false' }};</script>
+    <script>
+        (function () {
+            'use strict';
+
+            var REFRESH_MS = 5000;      // live reload cadence
+            var KEEPALIVE_MS = 5000;    // Render keep-alive ping cadence
+            var INPUT_IDLE_MS = 15000;  // reload only after 15s with no typing
+            var CLICK_IDLE_MS = 2000;   // reload only after 2s of no clicking
+            var SCROLL_KEY = 'ak.scrollPos';
+            var canReload = window.AK_AUTO_REFRESH === true;
+
+            // Quiet ping. Runs on every panel - including the excluded ones -
+            // so the free Render instance never hibernates, even when a
+            // reload would be disruptive. /healthz is lightweight and public.
+            function keepAlive() {
+                try {
+                    fetch('/healthz', { cache: 'no-store', credentials: 'same-origin' }).catch(function () {});
+                } catch (e) {}
+            }
+
+            function lastActivity() {
+                return parseInt(document.body.getAttribute('data-ak-last-input') || '0', 10);
+            }
+
+            function lastClick() {
+                return parseInt(document.body.getAttribute('data-ak-last-click') || '0', 10);
+            }
+
+            if (!canReload) {
+                keepAlive();
+                setInterval(keepAlive, KEEPALIVE_MS);
+                return;
+            }
+
+            ['input', 'change'].forEach(function (ev) {
+                document.addEventListener(ev, function () {
+                    document.body.setAttribute('data-ak-last-input', String(Date.now()));
+                }, true);
+            });
+
+            ['mousedown', 'keydown', 'touchstart', 'wheel'].forEach(function (ev) {
+                document.addEventListener(ev, function () {
+                    document.body.setAttribute('data-ak-last-click', String(Date.now()));
+                }, { passive: true, capture: true });
+            });
+
+            function openModal() {
+                return document.querySelector('.modal.show, .modal.in') !== null;
+            }
+
+            function tick() {
+                var now = Date.now();
+
+                if (document.visibilityState !== 'hidden'
+                    && now - lastActivity() >= INPUT_IDLE_MS
+                    && now - lastClick() >= CLICK_IDLE_MS
+                    && !openModal()) {
+                    try { sessionStorage.setItem(SCROLL_KEY, String(window.scrollY || 0)); } catch (e) {}
+                    location.reload();
+                    return;
+                }
+
+                // Suppressed (dirty, modal, background tab): stay warm and try again.
+                keepAlive();
+            }
+
+            // Restore scroll position once the reloaded page has laid out.
+            try {
+                var savedTop = parseInt(sessionStorage.getItem(SCROLL_KEY) || '0', 10);
+                if (savedTop > 0) {
+                    window.addEventListener('load', function () {
+                        window.scrollTo(0, savedTop);
+                    });
+                }
+            } catch (e) {}
+
+            if (history.scrollRestoration) history.scrollRestoration = 'manual';
+
+            keepAlive();
+            setInterval(tick, REFRESH_MS);
+        })();
+    </script>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">

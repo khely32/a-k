@@ -47,22 +47,29 @@ class AutoRefreshMetaTest extends TestCase
         ]);
     }
 
-    public function test_index_pages_carry_the_auto_refresh_meta(): void
+    public function test_index_pages_carry_the_live_refresh_flag(): void
     {
         $html = $this->actingAs($this->user)->get('/products')->assertOk()->getContent();
 
-        $this->assertStringContainsString('<meta http-equiv="refresh" content="5">', $html);
+        $this->assertStringContainsString('window.AK_AUTO_REFRESH = true;', $html);
+        $this->assertStringContainsString('var REFRESH_MS = 5000', $html);
     }
 
-    public function test_create_edit_and_pos_pages_are_excluded_from_refresh(): void
+    public function test_create_edit_pos_and_inventory_pages_are_keepalive_only(): void
     {
-        foreach (['/products/create', '/products/'.$this->product->id.'/edit', '/pos'] as $uri) {
+        foreach (['/products/create', '/products/'.$this->product->id.'/edit', '/pos', '/inventory'] as $uri) {
             $html = $this->actingAs($this->user)->get($uri)->assertOk()->getContent();
 
-            $this->assertStringNotContainsString(
-                '<meta http-equiv="refresh" content="5">',
+            $this->assertStringContainsString(
+                'window.AK_AUTO_REFRESH = false;',
                 $html,
-                "expected {$uri} to be excluded from auto-refresh"
+                "expected {$uri} to disable auto-refresh"
+            );
+            $this->assertStringNotContainsString('window.AK_AUTO_REFRESH = true;', $html);
+            $this->assertStringContainsString(
+                'setInterval(keepAlive, KEEPALIVE_MS)',
+                $html,
+                "expected {$uri} to keep the instance warm"
             );
         }
     }
