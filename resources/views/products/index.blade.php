@@ -41,8 +41,8 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
     #productsTable th,#productsTable td{white-space:nowrap;}
     #productsTable{--bs-table-bg:transparent!important;--bs-table-hover-bg:transparent!important;}
     #productsTable thead th{background:rgba(30,41,59,.8)!important;}
-    #productsTable tbody td{background:#0B1120;}
-    #productsTable tbody tr:hover td{background:rgba(30,41,59,.45)!important;}
+    #productsTable tbody td{background:transparent !important;}
+    #productsTable tbody tr:hover td{background:rgba(30,41,59,.45) !important;}
     .product-row{transition:background .15s ease;}
     .product-row:hover{background:rgba(30,41,59,.45)!important;}
     .btn.act-dark{background:#1E293B;color:#E2E8F0;border:1px solid #334155;}
@@ -232,7 +232,10 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
                 </thead>
                 <tbody style="background:#0B1120;">
                     @forelse($products as $product)
-                    <tr class="product-row" style="background:#0B1120;border-bottom:1px solid rgba(30,41,59,0.6);"
+                    @php
+                        $totalQty = $product->total_stock;
+                    @endphp
+                    <tr class="product-row {{ $totalQty <= 0 ? 'bg-red-950/40 border-l-4 border-l-red-500' : ($totalQty <= 10 ? 'bg-amber-950/40 border-l-4 border-l-yellow-500' : 'bg-slate-900/50') }}" style="border-bottom:1px solid rgba(30,41,59,0.6);"
                         data-name="{{ strtolower($product->name) }}"
                         data-brand="{{ strtolower($product->brand ?? '') }}"
                         data-category="{{ strtolower($product->category ?? '') }}"
