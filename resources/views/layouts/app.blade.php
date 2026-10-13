@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php
+        // Live 5-second auto-refresh across the admin & branch panels. Pages
+        // that would lose partially-entered work on a reload (create/edit
+        // forms, POS checkout, auth flows) are excluded.
+        $refreshExcluded = [
+            'pos.index',
+            'products.create', 'products.edit',
+            'users.create', 'users.edit',
+            'branches.create', 'branches.edit',
+            'inventory.create',
+            'transfers.create',
+            'profile.edit',
+            'register',
+            'forgot.email', 'forgot.code', 'forgot.reset',
+        ];
+        $autoRefresh = ! in_array(\Illuminate\Support\Facades\Route::currentRouteName(), $refreshExcluded, true);
+    @endphp
+    @if ($autoRefresh)
+        <meta http-equiv="refresh" content="5">
+    @endif
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
