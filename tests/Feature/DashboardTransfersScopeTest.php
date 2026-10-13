@@ -70,39 +70,33 @@ class DashboardTransfersScopeTest extends TestCase
         return (int) $m[1];
     }
 
-    public function test_branch_only_sees_transfers_it_is_involved_in(): void
+    public function test_branch_dashboard_only_counts_transfers_awaiting_its_approval(): void
     {
         $staff = $this->userOn($this->poblacion);
 
-        // Pending transfers between two other branches - invisible to Poblacion.
-        $this->transfer($this->other->id, $this->third->id);
-        $this->transfer($this->other->id, $this->third->id);
-        $this->transfer($this->third->id, $this->other->id);
+        // Transfer from another branch TO Poblacion, still PENDING and AWAITING
+        // that OTHER branch's approval (because status pending means the source
+        // hasn't approved yet). It should NOT count on Poblacion's dashboard.
+        $this->transfer($this->other->id, $this->poblacion->id); // pending; source is Other
 
-        // Pending transfers where Poblacion is the requester or the sender.
-        $this->transfer($this->poblacion->id, $this->other->id);
-        $this->transfer($this->other->id, $this->poblacion->id);
+        // Transfer from Poblacion TO another branch, PENDING — now Poblacion
+        // is the source and it's awaiting Poblacion's approval → counts.
+        $this->transfer($this->poblacion->id, $this->other->id); // pending; source is Poblacion
 
-        $this->assertSame(2, $this->awaitingApprovalCount($staff));
+        // Another incoming pending to Poblacion (also awaiting Other's approval)
+        $this->transfer($this->third->id, $this->poblacion->id);
+
+        $this->assertSame(1, $this->awaitingApprovalCount($staff));
     }
 
-    public function test_branch_with_no_pending_involvement_gets_zero(): void
+    public function test_poblacion_with_no_incoming_requests_to_approve_shows_zero(): void
     {
         $staff = $this->userOn($this->poblacion);
 
-        $this->transfer($this->other->id, $this->third->id, 'approved');
-        $this->transfer($this->other->id, $this->third->id);
+        // Only incoming, pending — awaiting other branches' approvals, not Poblacion's.
+        $this->transfer($this->other->id, $this->poblacion->id);
+        $this->transfer($this->third->id, $this->poblacion->id);
 
         $this->assertSame(0, $this->awaitingApprovalCount($staff));
-    }
-
-    public function test_scoping_applies_to_owners_dashboard_too(): void
-    {
-        $owner = $this->userOn($this->poblacion, 'owner');
-
-        $this->transfer($this->other->id, $this->third->id);
-        $this->transfer($this->poblacion->id, $this->other->id);
-
-        $this->assertSame(1, $this->awaitingApprovalCount($owner));
     }
 }

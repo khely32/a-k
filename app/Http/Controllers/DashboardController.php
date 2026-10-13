@@ -24,13 +24,11 @@ class DashboardController extends Controller
             $lowStock = Inventory::where('branch_id', $branchId)
                 ->where('quantity', '>', 0)->where('quantity', '<=', 5)->count();
             $outOfStock = Inventory::where('branch_id', $branchId)->where('quantity', 0)->count();
-            $pendingTransfers = StockTransfer::where('status', 'pending')
-                ->where(function ($q) use ($branchId) {
-                    $q->where('from_branch_id', $branchId)
-                      ->orWhere('to_branch_id', $branchId);
-                })->count();
+            $awaitingApproval = StockTransfer::where('from_branch_id', $branchId)
+                ->where('status', 'pending')
+                ->count();
 
-            $inventoryValue = Inventory::where('inventories.branch_id', $branchId)
+$inventoryValue = Inventory::where('inventories.branch_id', $branchId)
                 ->join('products', 'inventories.product_id', '=', 'products.id')
                 ->selectRaw('SUM(inventories.quantity * products.price) as total')
                 ->value('total') ?? 0;
@@ -58,13 +56,13 @@ class DashboardController extends Controller
                 'active_products' => $totalProducts,
                 'low_stock'       => $lowStock,
                 'out_of_stock'    => $outOfStock,
-                'total_transfers' => $pendingTransfers,
+                'total_transfers' => $awaitingApproval,
                 'total_products'  => $totalProducts,
                 'total_inventory' => $totalInventory,
                 'inventory_value' => $inventoryValue,
             ];
 
-            return view('dashboard', compact('user', 'stats', 'topProducts', 'recentSales', 'branchSummary'));
+            return view('dashboard', compact('user', 'stats', 'topProducts', 'recentSales', 'branchSummary'));;
         }
 
         // Staff
@@ -74,11 +72,9 @@ class DashboardController extends Controller
         $lowStock = Inventory::where('branch_id', $branchId)
             ->where('quantity', '>', 0)->where('quantity', '<=', 5)->count();
         $outOfStock = Inventory::where('branch_id', $branchId)->where('quantity', 0)->count();
-        $pendingTransfers = StockTransfer::where('status', 'pending')
-            ->where(function ($q) use ($branchId) {
-                $q->where('from_branch_id', $branchId)
-                  ->orWhere('to_branch_id', $branchId);
-            })->count();
+        $awaitingApproval = StockTransfer::where('from_branch_id', $branchId)
+            ->where('status', 'pending')
+            ->count();
 
         $inventoryValue = Inventory::where('inventories.branch_id', $branchId)
             ->join('products', 'inventories.product_id', '=', 'products.id')
@@ -108,7 +104,7 @@ class DashboardController extends Controller
             'active_products' => $totalProducts,
             'low_stock'       => $lowStock,
             'out_of_stock'    => $outOfStock,
-            'total_transfers' => $pendingTransfers,
+            'total_transfers' => $awaitingApproval,
             'total_products'  => $totalProducts,
             'total_inventory' => $totalInventory,
             'inventory_value' => $inventoryValue,
