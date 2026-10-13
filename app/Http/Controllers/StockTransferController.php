@@ -39,6 +39,7 @@ class StockTransferController extends Controller
         $products = Product::orderBy('name', 'asc')->get();
 
         $branches = Branch::orderBy('branch_name')->get();
+        $sourceBranches = $branches;
         $sourceBranch = null;
         $destinationBranch = null;
 
@@ -51,44 +52,54 @@ class StockTransferController extends Controller
             }
             $destinationBranch = Branch::findOrFail($user->branch_id);
             $sourceBranch = null;
+
+            // A branch can never request stock from itself, so drop the
+            // requesting user's own (destination) branch from the sources.
+            $sourceBranches = Branch::where('id', '!=', $user->branch_id)
+                ->orderBy('branch_name')
+                ->get();
         }
 
-        return view('transfers.create', compact('products', 'branches', 'sourceBranch', 'destinationBranch'));
+        return view('transfers.create', compact('products', 'branches', 'sourceBranches', 'sourceBranch', 'destinationBranch'));
     }
 
     public function store(Request $request)
     {
         $user = Auth::user();
 
-        if (strtolower($user->role) === 'owner') {
-            $request->validate([
-                'from_branch_id' => 'required|exists:branches,id',
-                'to_branch_id'   => 'required|exists:branches,id',
-                'product_id'     => 'required|exists:products,id',
-                'quantity'       => 'required|integer|min:1',
-            ]);
+if (strtolower($user->role) === 'owner') {
+        $request->validate([
+            'from_branch_id' => ['required', 'exists:branches,id', 'different:to_branch_id'],
+            'to_branch_id'   => ['required', 'exists:branches,id'],
+            'product_id'     => 'required|exists:products,id',
+            'quantity'       => 'required|integer|min:1',
+        ], [
+            'from_branch_id.different' => 'Source and destination branches must be different.',
+        ]);
 
-            if ($request->from_branch_id === $request->to_branch_id) {
-                return back()->withErrors(['to_branch_id' => 'Source and destination branches must be different.'])->withInput();
-            }
+        $fromBranch = $request->from_branch_id;
+        $toBranch   = $request->to_branch_id;
+    } else {
+        // from_branch_id must differ from the hidden to_branch_id (the
+        // requesting user's own branch) so a branch can never order stock
+        // from itself, even if the dropdown is bypassed.
+        $request->validate([
+            'from_branch_id' => ['required', 'exists:branches,id', 'different:to_branch_id'],
+            'product_id'     => 'required|exists:products,id',
+            'quantity'       => 'required|integer|min:1',
+        ], [
+            'from_branch_id.different' => 'You cannot request stock from your own branch.',
+        ]);
 
-            $fromBranch = $request->from_branch_id;
-            $toBranch   = $request->to_branch_id;
-        } else {
-            $request->validate([
-                'from_branch_id' => 'required|exists:branches,id',
-                'product_id'     => 'required|exists:products,id',
-                'quantity'       => 'required|integer|min:1',
-            ]);
-
-            $allowed = Branch::where('id', '!=', $user->branch_id)
-                ->pluck('id');
-            if (!$allowed->contains($request->from_branch_id)) {
-                return back()->withErrors(['from_branch_id' => 'Invalid source branch.'])->withInput();
-            }
-            $fromBranch = $request->from_branch_id;
-            $toBranch   = $user->branch_id;
+        // Belt-and-braces: only allow source branches that actually exist and
+        // are not the requesting user's own branch.
+        $allowed = Branch::where('id', '!=', $user->branch_id)->pluck('id');
+        if (!$user->branch_id || !$allowed->contains($request->from_branch_id)) {
+            return back()->withErrors(['from_branch_id' => 'Invalid source branch.'])->withInput();
         }
+        $fromBranch = $request->from_branch_id;
+        $toBranch   = $user->branch_id;
+    }
 
         StockTransfer::create([
             'from_branch_id' => $fromBranch,

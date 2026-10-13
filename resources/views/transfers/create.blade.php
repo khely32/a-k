@@ -280,7 +280,7 @@
                                     <label class="create-label">Request Stock From</label>
                                     <select name="from_branch_id" id="from_branch_id" class="create-select" required>
                                         <option value="">-- Select Source Branch --</option>
-                                        @foreach($branches as $branch)
+                                        @foreach($sourceBranches as $branch)
                                             <option value="{{ $branch->id }}" {{ old('from_branch_id') == $branch->id ? 'selected' : '' }}>
                                                 {{ $branch->branch_name }}
                                             </option>
