@@ -140,12 +140,12 @@ foreach ($products as $p) { foreach ($branches as $br) { $q = $p->branch_stock[$
         <div class="col-md-3">
             <div class="card p-4 border-0" style="background:var(--card);border:1px solid rgba(0,230,118,.15);border-radius:16px;">
                 <div class="d-flex align-items-center">
-                    <div class="rounded-circle p-3 d-flex align-items-center justify-content-center" style="background:rgba(0,230,118,.1);width:54px;height:54px;">
+                    <div class="rounded-circle p-3 d-flex align-items-center justify-content-center" style="background:rgba(0,230,118,.1);width:54px;height:54px;flex-shrink:0;">
                         <span class="fs-4 fw-bold" style="color:#10B981;">&#8369;</span>
                     </div>
-                    <div class="ms-3">
-                        <p class="mb-0 small fw-bold" style="color:var(--text);opacity:.6;font-size:.68rem;">INVENTORY VALUE</p>
-                        <h3 class="fw-bold mb-0" style="color:#10B981;">&#8369;{{ number_format($totalInventoryValue, 2) }}</h3>
+                    <div class="ms-3 flex-grow-1 min-w-0">
+                        <p class="mb-0 small fw-bold text-uppercase tracking-tight" style="color:var(--text);opacity:.6;font-size:.68rem;letter-spacing:.08em;">INVENTORY VALUE</p>
+                        <h3 class="fw-bold mb-0 text-truncate" style="color:#10B981;font-size:clamp(1.1rem, 2.2vw, 1.5rem);line-height:1.25;white-space:nowrap;overflow:hidden;" title="&#8369;{{ number_format($totalInventoryValue, 2) }}">&#8369;{{ number_format($totalInventoryValue, 2) }}</h3>
                     </div>
                 </div>
             </div>
