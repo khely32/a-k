@@ -339,69 +339,65 @@ body{
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:#dc2626;">{{ $notifCount > 99 ? '99+' : $notifCount }}</span>
                     @endif
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifDropdownBtn" style="background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,0.08);min-width:320px;max-height:400px;overflow-y:auto;">
-                    <li class="dropdown-header d-flex justify-content-between align-items-center">
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifDropdownBtn" style="background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,0.08);min-width:320px;">
+                    <li class="dropdown-header d-flex justify-content-between align-items-center px-3">
                         <span style="color:#fff;">Notifications</span>
                         <a href="#" class="small" style="color:#cbd5e1;" onclick="event.preventDefault();this.closest('ul').querySelectorAll('.dropdown-item').forEach(x=>{if(x.classList.contains('notif-h')){} });return false;">Clear All</a>
                     </li>
-                    <li><hr class="dropdown-divider" style="border-color:rgba(255,255,255,0.08)"></li>
+                    <li><hr class="dropdown-divider" style="border-color:rgba(255,255,255,0.08);margin:4px 0;"></li>
+                    <div class="notif-list" style="max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#334155 #0f172a;padding:4px 8px;">
                     @if(($badges['pending_transfers'] ?? 0) > 0)
-                        <li>
-                            <a href="{{ route('transfers.index') }}" class="group flex items-center justify-between p-3 my-1 rounded-lg bg-slate-900/60 border border-slate-800 hover:border-emerald-500/40 hover:bg-slate-800/80 hover:text-emerald-400 transition-all duration-150 cursor-pointer text-decoration-none">
-                                <div class="flex items-center gap-3">
-                                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px;height:16px;">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                        </svg>
-                                    </span>
-                                    <div>
-                                        <p class="text-sm font-semibold text-slate-100 group-hover:text-emerald-300 transition-colors m-0" style="font-size:0.875rem;">Stock transfers awaiting action</p>
-                                        <p class="text-xs text-slate-400 group-hover:text-slate-300 m-0" style="font-size:0.75rem;">{{ $badges['pending_transfers'] }} pending transfer request{{ $badges['pending_transfers'] > 1 ? 's' : '' }}</p>
-                                    </div>
+                        <a href="{{ route('transfers.index') }}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;border-radius:8px;background-color:#1e293b;border:1px solid #334155;text-decoration:none;" onmouseover="this.style.backgroundColor='#334155'" onmouseout="this.style.backgroundColor='#1e293b'">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div style="width:32px;height:32px;border-radius:50%;background-color:rgba(16,185,129,0.15);color:#34d399;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">
+                                    ⇄
                                 </div>
-                                <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 group-hover:bg-emerald-500 group-hover:text-black transition-colors" style="font-size:0.75rem;">{{ $badges['pending_transfers'] }}</span>
-                            </a>
-                        </li>
+                                <div style="display:flex;flex-direction:column;">
+                                    <span style="font-size:13px;font-weight:600;color:#f8fafc;line-height:1.2;">Stock transfers awaiting action</span>
+                                    <span style="font-size:11px;color:#94a3b8;margin-top:2px;">{{ $badges['pending_transfers'] }} pending transfer request{{ $badges['pending_transfers'] > 1 ? 's' : '' }}</span>
+                                </div>
+                            </div>
+                            <span style="padding:2px 8px;font-size:11px;font-weight:700;border-radius:12px;background-color:rgba(16,185,129,0.2);color:#34d399;border:1px solid rgba(16,185,129,0.3);">
+                                {{ $badges['pending_transfers'] }}
+                            </span>
+                        </a>
                     @endif
                     @if(($badges['low_stock'] ?? 0) > 0)
-                        <li>
-                            <a href="{{ route('inventory.index') }}" class="group flex items-center justify-between p-3 my-1 rounded-lg bg-slate-900/60 border border-slate-800 hover:border-emerald-500/40 hover:bg-slate-800/80 hover:text-emerald-400 transition-all duration-150 cursor-pointer text-decoration-none">
-                                <div class="flex items-center gap-3">
-                                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px;height:16px;">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                        </svg>
-                                    </span>
-                                    <div>
-                                        <p class="text-sm font-semibold text-slate-100 group-hover:text-emerald-300 transition-colors m-0" style="font-size:0.875rem;">Low stock alerts</p>
-                                        <p class="text-xs text-slate-400 group-hover:text-slate-300 m-0" style="font-size:0.75rem;">{{ $badges['low_stock'] }} item{{ $badges['low_stock'] > 1 ? 's' : '' }} need attention</p>
-                                    </div>
+                        <a href="{{ route('inventory.index') }}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;border-radius:8px;background-color:#1e293b;border:1px solid #334155;text-decoration:none;" onmouseover="this.style.backgroundColor='#334155'" onmouseout="this.style.backgroundColor='#1e293b'">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div style="width:32px;height:32px;border-radius:50%;background-color:rgba(251,146,60,0.15);color:#fb923c;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">
+                                    !
                                 </div>
-                                <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-black transition-colors" style="font-size:0.75rem;">{{ $badges['low_stock'] }}</span>
-                            </a>
-                        </li>
+                                <div style="display:flex;flex-direction:column;">
+                                    <span style="font-size:13px;font-weight:600;color:#f8fafc;line-height:1.2;">Low stock alerts</span>
+                                    <span style="font-size:11px;color:#94a3b8;margin-top:2px;">{{ $badges['low_stock'] }} item{{ $badges['low_stock'] > 1 ? 's' : '' }} need attention</span>
+                                </div>
+                            </div>
+                            <span style="padding:2px 8px;font-size:11px;font-weight:700;border-radius:12px;background-color:rgba(251,146,60,0.2);color:#fb923c;border:1px solid rgba(251,146,60,0.3);">
+                                {{ $badges['low_stock'] }}
+                            </span>
+                        </a>
                     @endif
                     @if(($badges['out_of_stock'] ?? 0) > 0)
-                        <li>
-                            <a href="{{ route('inventory.index') }}" class="group flex items-center justify-between p-3 my-1 rounded-lg bg-slate-900/60 border border-slate-800 hover:border-emerald-500/40 hover:bg-slate-800/80 hover:text-emerald-400 transition-all duration-150 cursor-pointer text-decoration-none">
-                                <div class="flex items-center gap-3">
-                                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px;height:16px;">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </span>
-                                    <div>
-                                        <p class="text-sm font-semibold text-slate-100 group-hover:text-emerald-300 transition-colors m-0" style="font-size:0.875rem;">Out of stock alerts</p>
-                                        <p class="text-xs text-slate-400 group-hover:text-slate-300 m-0" style="font-size:0.75rem;">{{ $badges['out_of_stock'] }} item{{ $badges['out_of_stock'] > 1 ? 's' : '' }} are out of stock</p>
-                                    </div>
+                        <a href="{{ route('inventory.index') }}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;border-radius:8px;background-color:#1e293b;border:1px solid #334155;text-decoration:none;" onmouseover="this.style.backgroundColor='#334155'" onmouseout="this.style.backgroundColor='#1e293b'">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div style="width:32px;height:32px;border-radius:50%;background-color:rgba(239,68,68,0.15);color:#f87171;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">
+                                    ✕
                                 </div>
-                                <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-red-500/20 text-red-400 border border-red-500/30 group-hover:bg-red-500 group-hover:text-black transition-colors" style="font-size:0.75rem;">{{ $badges['out_of_stock'] }}</span>
-                            </a>
-                        </li>
+                                <div style="display:flex;flex-direction:column;">
+                                    <span style="font-size:13px;font-weight:600;color:#f8fafc;line-height:1.2;">Out of stock alerts</span>
+                                    <span style="font-size:11px;color:#94a3b8;margin-top:2px;">{{ $badges['out_of_stock'] }} item{{ $badges['out_of_stock'] > 1 ? 's' : '' }} are out of stock</span>
+                                </div>
+                            </div>
+                            <span style="padding:2px 8px;font-size:11px;font-weight:700;border-radius:12px;background-color:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);">
+                                {{ $badges['out_of_stock'] }}
+                            </span>
+                        </a>
                     @endif
                     @if($notifCount == 0)
-                        <li><span class="dropdown-item-text" style="color:#94a3b8;">No notifications</span></li>
+                        <div style="padding:12px;color:#94a3b8;text-align:center;font-size:13px;">No notifications</div>
                     @endif
+                    </div>
                 </ul>
             </div>
         </div>
