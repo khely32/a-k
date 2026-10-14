@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use App\Support\BranchNotifications;
 use App\Models\StockTransfer;
 use App\Models\Inventory;
 use App\Models\Product;
@@ -36,7 +37,23 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
-            $view->with('badges', $badges);
+            // Chronological, per-branch notification feed for the bell menu.
+            // Scoped to the authenticated user's own branch.
+            $notifications = $user ? BranchNotifications::forBranch($user->branch_id) : [];
+
+            // "Mark all as read" stores the moment in the session; anything
+            // newer than that is still unread (drives the bell badge).
+            $readAt = session('notifications_read_at');
+            $unread = 0;
+            foreach ($notifications as $n) {
+                if (! $readAt || ($n['time'] && $n['time']->gt($readAt))) {
+                    $unread++;
+                }
+            }
+
+            $view->with('badges', $badges)
+                ->with('notifications', $notifications)
+                ->with('notifUnread', $unread);
         });
     }
 }

@@ -332,71 +332,49 @@ body{
     @auth
         <div class="top-header" style="display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-bottom:16px;">
             <div class="dropdown">
+                @php
+                    $notifPalette = [
+                        'transfer'  => ['bg' => 'rgba(16,185,129,0.15)', 'fg' => '#34d399', 'ring' => 'rgba(16,185,129,0.28)'],
+                        'completed' => ['bg' => 'rgba(0,229,255,0.12)',  'fg' => '#22d3ee', 'ring' => 'rgba(0,229,255,0.25)'],
+                        'low'       => ['bg' => 'rgba(251,146,60,0.15)', 'fg' => '#fb923c', 'ring' => 'rgba(251,146,60,0.28)'],
+                        'out'       => ['bg' => 'rgba(239,68,68,0.15)',  'fg' => '#f87171', 'ring' => 'rgba(239,68,68,0.28)'],
+                    ];
+                @endphp
                 <button class="btn btn-dark position-relative" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="border:1px solid rgba(255,255,255,0.08);background:rgba(30,41,59,0.6);color:#fff;">
                     <i class="bi bi-bell"></i>
-                    @php $notifCount = ($badges['pending_transfers'] ?? 0) + ($badges['low_stock'] ?? 0) + ($badges['out_of_stock'] ?? 0); @endphp
-                    @if($notifCount > 0)
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:#dc2626;">{{ $notifCount > 99 ? '99+' : $notifCount }}</span>
+                    @if(($notifUnread ?? 0) > 0)
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:#dc2626;">{{ $notifUnread > 99 ? '99+' : $notifUnread }}</span>
                     @endif
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifDropdownBtn" style="background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,0.08);min-width:320px;">
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifDropdownBtn" style="background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,0.08);min-width:340px;">
                     <li class="dropdown-header d-flex justify-content-between align-items-center px-3">
                         <span style="color:#fff;">Notifications</span>
-                        <a href="#" class="small" style="color:#cbd5e1;" onclick="event.preventDefault();this.closest('ul').querySelectorAll('.dropdown-item').forEach(x=>{if(x.classList.contains('notif-h')){} });return false;">Clear All</a>
+                        @if(!empty($notifications))
+                            <form method="POST" action="{{ route('notifications.read') }}" style="margin:0;">
+                                @csrf
+                                <button type="submit" style="background:none;border:0;padding:0;cursor:pointer;font-size:0.8rem;color:#cbd5e1;">Mark all as read</button>
+                            </form>
+                        @endif
                     </li>
                     <li><hr class="dropdown-divider" style="border-color:rgba(255,255,255,0.08);margin:4px 0;"></li>
-                    <div class="notif-list" style="max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#334155 #0f172a;padding:4px 8px;">
-                    @if(($badges['pending_transfers'] ?? 0) > 0)
-                        <a href="{{ route('transfers.index') }}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;border-radius:8px;background-color:#1e293b;border:1px solid #334155;text-decoration:none;" onmouseover="this.style.backgroundColor='#334155'" onmouseout="this.style.backgroundColor='#1e293b'">
-                            <div style="display:flex;align-items:center;gap:12px;">
-                                <div style="width:32px;height:32px;border-radius:50%;background-color:rgba(16,185,129,0.15);color:#34d399;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">
-                                    ⇄
-                                </div>
-                                <div style="display:flex;flex-direction:column;">
-                                    <span style="font-size:13px;font-weight:600;color:#f8fafc;line-height:1.2;">Stock transfers awaiting action</span>
-                                    <span style="font-size:11px;color:#94a3b8;margin-top:2px;">{{ $badges['pending_transfers'] }} pending transfer request{{ $badges['pending_transfers'] > 1 ? 's' : '' }}</span>
-                                </div>
+                    <div class="notif-list" style="max-height:340px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#334155 #0f172a;padding:4px 8px;">
+                    @forelse(($notifications ?? []) as $n)
+                        @php $p = $notifPalette[$n['type']] ?? $notifPalette['completed']; @endphp
+                        <a href="{{ $n['url'] }}" style="display:flex;align-items:flex-start;gap:12px;padding:10px 12px;margin-bottom:8px;border-radius:8px;background-color:#1e293b;border:1px solid #334155;text-decoration:none;" onmouseover="this.style.backgroundColor='#334155'" onmouseout="this.style.backgroundColor='#1e293b'">
+                            <div style="width:32px;height:32px;border-radius:50%;background-color:{{ $p['bg'] }};color:{{ $p['fg'] }};border:1px solid {{ $p['ring'] }};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;">
+                                <i class="bi {{ $n['icon'] }}"></i>
                             </div>
-                            <span style="padding:2px 8px;font-size:11px;font-weight:700;border-radius:12px;background-color:rgba(16,185,129,0.2);color:#34d399;border:1px solid rgba(16,185,129,0.3);">
-                                {{ $badges['pending_transfers'] }}
-                            </span>
-                        </a>
-                    @endif
-                    @if(($badges['low_stock'] ?? 0) > 0)
-                        <a href="{{ route('inventory.index') }}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;border-radius:8px;background-color:#1e293b;border:1px solid #334155;text-decoration:none;" onmouseover="this.style.backgroundColor='#334155'" onmouseout="this.style.backgroundColor='#1e293b'">
-                            <div style="display:flex;align-items:center;gap:12px;">
-                                <div style="width:32px;height:32px;border-radius:50%;background-color:rgba(251,146,60,0.15);color:#fb923c;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">
-                                    !
-                                </div>
-                                <div style="display:flex;flex-direction:column;">
-                                    <span style="font-size:13px;font-weight:600;color:#f8fafc;line-height:1.2;">Low stock alerts</span>
-                                    <span style="font-size:11px;color:#94a3b8;margin-top:2px;">{{ $badges['low_stock'] }} item{{ $badges['low_stock'] > 1 ? 's' : '' }} need attention</span>
-                                </div>
+                            <div style="display:flex;flex-direction:column;min-width:0;">
+                                <span style="font-size:13px;font-weight:600;color:#f8fafc;line-height:1.2;">{{ $n['title'] }}</span>
+                                <span style="font-size:11px;color:#94a3b8;margin-top:2px;white-space:normal;">{{ $n['message'] }}</span>
+                                @if(!empty($n['time']))
+                                    <span style="font-size:10px;color:#64748b;margin-top:3px;">{{ $n['time']->diffForHumans() }}</span>
+                                @endif
                             </div>
-                            <span style="padding:2px 8px;font-size:11px;font-weight:700;border-radius:12px;background-color:rgba(251,146,60,0.2);color:#fb923c;border:1px solid rgba(251,146,60,0.3);">
-                                {{ $badges['low_stock'] }}
-                            </span>
                         </a>
-                    @endif
-                    @if(($badges['out_of_stock'] ?? 0) > 0)
-                        <a href="{{ route('inventory.index') }}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;border-radius:8px;background-color:#1e293b;border:1px solid #334155;text-decoration:none;" onmouseover="this.style.backgroundColor='#334155'" onmouseout="this.style.backgroundColor='#1e293b'">
-                            <div style="display:flex;align-items:center;gap:12px;">
-                                <div style="width:32px;height:32px;border-radius:50%;background-color:rgba(239,68,68,0.15);color:#f87171;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">
-                                    ✕
-                                </div>
-                                <div style="display:flex;flex-direction:column;">
-                                    <span style="font-size:13px;font-weight:600;color:#f8fafc;line-height:1.2;">Out of stock alerts</span>
-                                    <span style="font-size:11px;color:#94a3b8;margin-top:2px;">{{ $badges['out_of_stock'] }} item{{ $badges['out_of_stock'] > 1 ? 's' : '' }} are out of stock</span>
-                                </div>
-                            </div>
-                            <span style="padding:2px 8px;font-size:11px;font-weight:700;border-radius:12px;background-color:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);">
-                                {{ $badges['out_of_stock'] }}
-                            </span>
-                        </a>
-                    @endif
-                    @if($notifCount == 0)
+                    @empty
                         <div style="padding:12px;color:#94a3b8;text-align:center;font-size:13px;">No notifications</div>
-                    @endif
+                    @endforelse
                     </div>
                 </ul>
             </div>

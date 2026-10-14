@@ -138,6 +138,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/transfers', [StockTransferController::class, 'index'])->name('transfers.index');
     Route::get('/transfers/create', [StockTransferController::class, 'create'])->name('transfers.create');
     Route::post('/transfers/store', [StockTransferController::class, 'store'])->name('transfers.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notifications
+    |--------------------------------------------------------------------------
+    */
+    Route::post('/notifications/read', [\App\Http\Controllers\NotificationController::class, 'markRead'])->name('notifications.read');
     Route::get('/transfers/check-stock', [StockTransferController::class, 'checkStock'])->name('transfers.checkStock');
     Route::get('/transfer-history', [StockTransferController::class, 'history'])->name('transfers.history');
     Route::patch('/transfers/{id}/confirm', [StockTransferController::class, 'confirmReceipt'])->name('transfers.confirm');
