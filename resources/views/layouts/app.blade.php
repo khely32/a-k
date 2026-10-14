@@ -18,9 +18,18 @@
             'branches.create', 'branches.edit',
             'inventory.index', 'inventory.create',
             'transfers.create',
+            'transfers.history',
             'profile.edit',
             'register',
             'forgot.email', 'forgot.code', 'forgot.reset',
+            'reports.index',
+            'reports.inventory',
+            'reports.sales',
+            'reports.transaction-history',
+            'reports.daily-income',
+            'reports.branch-analytics',
+            'reports.transaction-data',
+            'reports.data',
         ];
         $autoRefresh = ! in_array(\Illuminate\Support\Facades\Route::currentRouteName(), $refreshExcluded, true);
     @endphp
