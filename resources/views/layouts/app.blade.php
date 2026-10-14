@@ -341,21 +341,21 @@ body{
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifDropdownBtn" style="background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,0.08);min-width:320px;max-height:400px;overflow-y:auto;">
                     <li class="dropdown-header d-flex justify-content-between align-items-center">
-                        <span>Notifications</span>
-                        <a href="#" class="text-muted small" onclick="event.preventDefault();this.closest('ul').querySelectorAll('.notif-item').forEach(x=>x.style.display='none');return false;">Clear All</a>
+                        <span style="color:#fff;">Notifications</span>
+                        <a href="#" class="small" style="color:#cbd5e1;" onclick="event.preventDefault();this.closest('ul').querySelectorAll('.dropdown-item').forEach(x=>{if(x.classList.contains('notif-h')){} });return false;">Clear All</a>
                     </li>
                     <li><hr class="dropdown-divider" style="border-color:rgba(255,255,255,0.08)"></li>
                     @if(($badges['pending_transfers'] ?? 0) > 0)
-                        <li><a class="dropdown-item" href="{{ route('transfers.index') }}">Stock transfers awaiting action ({{ $badges['pending_transfers'] }})</a></li>
+                        <li><a class="dropdown-item" href="{{ route('transfers.index') }}" style="color:#fff;">Stock transfers awaiting action ({{ $badges['pending_transfers'] }})</a></li>
                     @endif
                     @if(($badges['low_stock'] ?? 0) > 0)
-                        <li><a class="dropdown-item" href="{{ route('inventory.index') }}">Low stock alerts ({{ $badges['low_stock'] }})</a></li>
+                        <li><a class="dropdown-item" href="{{ route('inventory.index') }}" style="color:#fff;">Low stock alerts ({{ $badges['low_stock'] }})</a></li>
                     @endif
                     @if(($badges['out_of_stock'] ?? 0) > 0)
-                        <li><a class="dropdown-item" href="{{ route('inventory.index') }}">Out of stock alerts ({{ $badges['out_of_stock'] }})</a></li>
+                        <li><a class="dropdown-item" href="{{ route('inventory.index') }}" style="color:#fff;">Out of stock alerts ({{ $badges['out_of_stock'] }})</a></li>
                     @endif
                     @if($notifCount == 0)
-                        <li><span class="dropdown-item-text text-muted">No notifications</span></li>
+                        <li><span class="dropdown-item-text" style="color:#94a3b8;">No notifications</span></li>
                     @endif
                 </ul>
             </div>
