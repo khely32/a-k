@@ -278,15 +278,12 @@ body{
             </a>
             <a href="{{ route('inventory.index') }}" class="nav-link {{ request()->routeIs('inventory.*') ? 'active' : '' }}">
                 <i class="bi bi-box-seam"></i> Inventory
-                @php $sa = ($badges['low_stock'] ?? 0) + ($badges['out_of_stock'] ?? 0); @endphp
-                @if($sa > 0)<span class="nav-badge yellow">{{ $sa }}</span>@endif
             </a>
             <a href="{{ route('pos.index') }}" class="nav-link {{ request()->routeIs('pos.*') ? 'active' : '' }}">
                 <i class="bi bi-terminal"></i> POS
             </a>
             <a href="{{ route('transfers.index') }}" class="nav-link {{ request()->routeIs('transfers.*') ? 'active' : '' }}">
                 <i class="bi bi-arrow-left-right"></i> Stock Transfers
-                @if(($badges['pending_transfers'] ?? 0) > 0)<span class="nav-badge red">{{ $badges['pending_transfers'] }}</span>@endif
             </a>
 
             <div class="nav-section">Analytics</div>
@@ -332,6 +329,38 @@ body{
 @endauth
 
 <div class="content-wrapper">
+    @auth
+        <div class="top-header" style="display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-bottom:16px;">
+            <div class="dropdown">
+                <button class="btn btn-dark position-relative" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="border:1px solid rgba(255,255,255,0.08);background:rgba(30,41,59,0.6);color:#fff;">
+                    <i class="bi bi-bell"></i>
+                    @php $notifCount = ($badges['pending_transfers'] ?? 0) + ($badges['low_stock'] ?? 0) + ($badges['out_of_stock'] ?? 0); @endphp
+                    @if($notifCount > 0)
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:#dc2626;">{{ $notifCount > 99 ? '99+' : $notifCount }}</span>
+                    @endif
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifDropdownBtn" style="background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,0.08);min-width:320px;max-height:400px;overflow-y:auto;">
+                    <li class="dropdown-header d-flex justify-content-between align-items-center">
+                        <span>Notifications</span>
+                        <a href="#" class="text-muted small" onclick="event.preventDefault();this.closest('ul').querySelectorAll('.notif-item').forEach(x=>x.style.display='none');return false;">Clear All</a>
+                    </li>
+                    <li><hr class="dropdown-divider" style="border-color:rgba(255,255,255,0.08)"></li>
+                    @if(($badges['pending_transfers'] ?? 0) > 0)
+                        <li><a class="dropdown-item" href="{{ route('transfers.index') }}">Stock transfers awaiting action ({{ $badges['pending_transfers'] }})</a></li>
+                    @endif
+                    @if(($badges['low_stock'] ?? 0) > 0)
+                        <li><a class="dropdown-item" href="{{ route('inventory.index') }}">Low stock alerts ({{ $badges['low_stock'] }})</a></li>
+                    @endif
+                    @if(($badges['out_of_stock'] ?? 0) > 0)
+                        <li><a class="dropdown-item" href="{{ route('inventory.index') }}">Out of stock alerts ({{ $badges['out_of_stock'] }})</a></li>
+                    @endif
+                    @if($notifCount == 0)
+                        <li><span class="dropdown-item-text text-muted">No notifications</span></li>
+                    @endif
+                </ul>
+            </div>
+        </div>
+    @endauth
     @yield('content')
 </div>
 
