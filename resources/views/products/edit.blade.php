@@ -97,6 +97,7 @@
     <div class="ep-card p-4 p-md-5">
         <form action="{{ route('products.update', $product) }}" method="POST">
             @csrf
+            @honeypot
             @method('PUT')
             @if(request('from') === 'inventory')
             <input type="hidden" name="from" value="inventory">

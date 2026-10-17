@@ -27,6 +27,7 @@
 
                     <form method="POST" action="{{ route('register') }}">
                         @csrf
+                        @honeypot
 
                         <div class="mb-3">
                             <label class="form-label">Full Name</label>

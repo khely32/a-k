@@ -26,6 +26,7 @@
 
                 <form action="{{ route('forgot.code.verify') }}" method="POST">
                     @csrf
+                    @honeypot
                     <div class="mb-3">
                         <label for="code" class="form-label">Verification Code</label>
                         <input type="text" name="code" id="code" class="form-control text-center" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" required autofocus style="font-size:1.5rem;letter-spacing:8px;font-family:monospace;">

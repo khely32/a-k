@@ -245,6 +245,7 @@
                 <div class="create-card-body">
                     <form action="{{ route('transfers.store') }}" method="POST">
                         @csrf
+                        @honeypot
 
                         <div class="row mb-4">
 

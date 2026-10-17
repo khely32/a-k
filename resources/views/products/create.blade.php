@@ -38,6 +38,7 @@
             <div class="add-product-body">
                 <form action="{{ route('products.store') }}" method="POST" id="addProductForm">
                     @csrf
+                    @honeypot
 
                     <div class="row">
                         <div class="col-md-6 mb-3">

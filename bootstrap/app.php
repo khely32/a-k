@@ -22,9 +22,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
 
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'branch.active' => \App\Http\Middleware\CheckBranchActive::class,
+            'honeypot' => \App\Http\Middleware\ProtectAgainstSpam::class,
         ]);
 
         // These must run inside the "web" group (after StartSession), not as

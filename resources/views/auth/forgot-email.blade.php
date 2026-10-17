@@ -144,6 +144,7 @@
 
             <form action="{{ route('forgot.send') }}" method="POST">
                 @csrf
+                @honeypot
 
                 <div class="fg">
                     <label>Email Address</label>

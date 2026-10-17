@@ -83,6 +83,7 @@
         <div class="card-body">
             <form action="{{ route('profile.update') }}" method="POST">
                 @csrf
+                @honeypot
                 @method('PUT')
 
                 <div class="mb-3">

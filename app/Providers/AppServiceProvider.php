@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use App\Support\BranchNotifications;
 use App\Models\StockTransfer;
 use App\Models\Inventory;
@@ -18,6 +21,14 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        RateLimiter::for('pos-checkout', function (Request $request) {
+            return Limit::perMinute(10)
+                ->by('pos-checkout:'.($request->user()?->getKey() ?? $request->ip()))
+                ->response(fn (Request $request, array $headers) => response()->json([
+                    'error' => 'Too many checkout attempts. Please wait a moment and try again.',
+                ], 429, $headers));
+        });
+
         View::composer('layouts.app', function ($view) {
             $user = auth()->user();
             $badges = [];

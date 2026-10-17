@@ -37,10 +37,10 @@ Route::get('/', function () {
 */
 
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/login', [LoginController::class, 'login'])->middleware(['throttle:5,1', 'honeypot']);
 
 Route::get('/register', [LoginController::class, 'showRegisterForm'])->name('register');
-Route::post('/register', [LoginController::class, 'register'])->middleware('throttle:5,1');
+Route::post('/register', [LoginController::class, 'register'])->middleware(['throttle:5,1', 'honeypot']);
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
@@ -51,11 +51,11 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 */
 Route::prefix('forgot-password')->name('forgot.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showEmailForm'])->name('email');
-    Route::post('/send-code', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendCode'])->middleware('throttle:3,10')->name('send');
+    Route::post('/send-code', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendCode'])->middleware(['throttle:3,10', 'honeypot'])->name('send');
     Route::get('/enter-code', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showCodeForm'])->name('code');
-    Route::post('/verify-code', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'verifyCode'])->middleware('throttle:5,10')->name('code.verify');
+    Route::post('/verify-code', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'verifyCode'])->middleware(['throttle:5,10', 'honeypot'])->name('code.verify');
     Route::get('/reset', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showResetForm'])->name('reset');
-    Route::post('/reset-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'resetPassword'])->middleware('throttle:5,10')->name('reset.update');
+    Route::post('/reset-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'resetPassword'])->middleware(['throttle:5,10', 'honeypot'])->name('reset.update');
 });
 
 /*
@@ -97,7 +97,7 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->middleware('honeypot')->name('profile.update');
 
     /*
     |--------------------------------------------------------------------------
@@ -128,7 +128,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/pos/remove', [PosController::class, 'removeFromCart'])->name('pos.removeFromCart');
     Route::post('/pos/qty', [PosController::class, 'updateQty'])->name('pos.updateQty');
     Route::post('/pos/clear', [PosController::class, 'clearCart'])->name('pos.clearCart');
-    Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+    Route::post('/pos/checkout', [PosController::class, 'checkout'])->middleware('throttle:pos-checkout')->name('pos.checkout');
 
     /*
     |--------------------------------------------------------------------------
@@ -137,7 +137,7 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::get('/transfers', [StockTransferController::class, 'index'])->name('transfers.index');
     Route::get('/transfers/create', [StockTransferController::class, 'create'])->name('transfers.create');
-    Route::post('/transfers/store', [StockTransferController::class, 'store'])->name('transfers.store');
+    Route::post('/transfers/store', [StockTransferController::class, 'store'])->middleware(['throttle:10,1', 'honeypot'])->name('transfers.store');
 
     /*
     |--------------------------------------------------------------------------
@@ -147,9 +147,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/read', [\App\Http\Controllers\NotificationController::class, 'markRead'])->name('notifications.read');
     Route::get('/transfers/check-stock', [StockTransferController::class, 'checkStock'])->name('transfers.checkStock');
     Route::get('/transfer-history', [StockTransferController::class, 'history'])->name('transfers.history');
-    Route::patch('/transfers/{id}/confirm', [StockTransferController::class, 'confirmReceipt'])->name('transfers.confirm');
-    Route::patch('/transfers/{id}/approve', [StockTransferController::class, 'approve'])->name('transfers.approve');
-    Route::patch('/transfers/{id}/reject', [StockTransferController::class, 'reject'])->name('transfers.reject');
+    Route::patch('/transfers/{id}/confirm', [StockTransferController::class, 'confirmReceipt'])->middleware('throttle:10,1')->name('transfers.confirm');
+    Route::patch('/transfers/{id}/approve', [StockTransferController::class, 'approve'])->middleware('throttle:10,1')->name('transfers.approve');
+    Route::patch('/transfers/{id}/reject', [StockTransferController::class, 'reject'])->middleware('throttle:10,1')->name('transfers.reject');
 
     /*
     |--------------------------------------------------------------------------
@@ -185,7 +185,7 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
     Route::post('/products/restock', [ProductController::class, 'restock'])->name('products.restock');
-    Route::resource('products', ProductController::class)->except(['show']);
+    Route::resource('products', ProductController::class)->except(['show'])->middlewareFor(['store', 'update'], 'honeypot');
     Route::get('/category-sizes/{category}', [ProductController::class, 'getSizes'])->name('category.sizes');
 
     /*
@@ -193,7 +193,7 @@ Route::middleware(['auth'])->group(function () {
     | Users
     |--------------------------------------------------------------------------
     */
-    Route::resource('users', \App\Http\Controllers\UserController::class)->except(['show']);
+    Route::resource('users', \App\Http\Controllers\UserController::class)->except(['show'])->middlewareFor(['store', 'update'], 'honeypot');
     Route::post('/users/{user}/reveal-password', [\App\Http\Controllers\UserController::class, 'revealPassword'])->name('users.revealPassword');
     Route::post('/users/{user}/reset-password', [\App\Http\Controllers\UserController::class, 'resetPassword'])->name('users.resetPassword');
     Route::post('/users/{user}/update-username', [\App\Http\Controllers\UserController::class, 'updateUsername'])->name('users.updateUsername');

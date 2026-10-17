@@ -22,6 +22,7 @@
 
                 <form action="{{ route('forgot.reset.update') }}" method="POST">
                     @csrf
+                    @honeypot
                     <div class="mb-3">
                         <label for="password" class="form-label">New Password</label>
                         <input type="password" name="password" id="password" class="form-control" minlength="6" required autofocus>

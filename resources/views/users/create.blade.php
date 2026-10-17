@@ -8,6 +8,7 @@
         <div class="card-body">
             <form action="{{ route('users.store') }}" method="POST">
                 @csrf
+                @honeypot
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="name" class="form-label">Full Name</label>

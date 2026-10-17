@@ -164,6 +164,7 @@
 
             <form action="{{ route('login') }}" method="POST">
                 @csrf
+                @honeypot
 
                 <div class="fg">
                     <label>Username / Email</label>
