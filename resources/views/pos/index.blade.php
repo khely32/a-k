@@ -750,6 +750,12 @@ document.addEventListener('DOMContentLoaded', function () {
     $('checkout-btn').addEventListener('click', function () {
         const customerIdEl = $('customer-id');
         const customerId = customerIdEl ? customerIdEl.value.trim() : '';
+
+        // Open the receipt tab up front, while we are still inside the click
+        // gesture, so the browser's popup blocker lets it through. It stays
+        // blank until the sale succeeds, and is closed again if we bail.
+        const receiptWin = window.open('about:blank', '_blank');
+
         fetch('{{ route("pos.checkout") }}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
@@ -758,15 +764,30 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(r => r.json().then(d => ({ ok: r.ok, d })))
         .then(({ ok, d }) => {
             if (ok) {
-                alert(d.success);
                 if (customerIdEl) customerIdEl.value = '';
                 loadCart();
                 loadProducts();
+                openReceipt(d.receipt_url, receiptWin);
             } else {
+                if (receiptWin && !receiptWin.closed) receiptWin.close();
                 alert(d.error);
             }
+        })
+        .catch(() => {
+            if (receiptWin && !receiptWin.closed) receiptWin.close();
         });
     });
+
+    function openReceipt(url, win){
+        if (!url) return;
+        if (win && !win.closed) {
+            win.location = url;
+            try { win.focus(); } catch (e) {}
+        } else {
+            // Popup blocked: fall back to opening in the current tab.
+            window.location = url;
+        }
+    }
 
     /* ---------------- INIT ---------------- */
     loadCategories().then(loadProducts);

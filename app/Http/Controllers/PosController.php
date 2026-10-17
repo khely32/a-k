@@ -179,7 +179,7 @@ class PosController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($cart, $request) {
+            $sale = DB::transaction(function () use ($cart, $request) {
                 $subtotal = 0;
                 foreach ($cart as $item) {
                     $subtotal += $item['price'] * $item['qty'];
@@ -225,13 +225,37 @@ class PosController extends Controller
                         'price'      => $item['price'],
                     ]);
                 }
+
+                return $sale;
             });
 
             session()->forget('cart');
-            return response()->json(['success' => '✅ Sale completed and stock updated!']);
+            return response()->json([
+                'success'     => '✅ Sale completed and stock updated!',
+                'sale_id'     => $sale->id,
+                'receipt_url' => route('pos.receipt', $sale),
+            ]);
 
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);
         }
+    }
+
+    // 🧾 PRINTABLE RECEIPT
+    // Owner/admin may open a receipt from any branch; a cashier is limited to
+    // sales rung up for their own branch, mirroring the transaction reports.
+    public function receipt(Sale $sale)
+    {
+        $user = auth()->user();
+
+        $isSupervisor = in_array($user->role, ['owner', 'admin'], true);
+
+        if (! $isSupervisor && (int) $sale->branch_id !== (int) $user->branch_id) {
+            abort(403);
+        }
+
+        $sale->load(['items.product', 'branch', 'user']);
+
+        return view('pos.receipt', compact('sale'));
     }
 }

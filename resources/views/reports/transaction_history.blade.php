@@ -128,6 +128,7 @@
                     <th class="px-4 py-3">Items</th>
                     <th class="px-4 py-3">Payment</th>
                     <th class="px-4 py-3 text-end">Total</th>
+                    <th class="px-4 py-3 text-center">Receipt</th>
                 </tr>
             </thead>
             <tbody id="tx-tbody">
@@ -155,16 +156,22 @@
                         <td class="px-4 py-3 text-end text-success fw-semibold">
                             ₱{{ number_format($sale->total_amount, 2) }}
                         </td>
+                        <td class="px-4 py-3 text-center">
+                            <a href="{{ route('pos.receipt', $sale) }}" target="_blank" rel="noopener"
+                               class="btn btn-sm btn-outline-info" title="View / print receipt">
+                                <i class="bi bi-receipt"></i>
+                            </a>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center text-secondary py-5">No transactions found.</td>
+                        <td colspan="8" class="text-center text-secondary py-5">No transactions found.</td>
                     </tr>
                 @endforelse
             </tbody>
             <tfoot id="tx-tfoot">
                 <tr>
-                    <th colspan="6" class="px-4 py-3 text-end text-white">Grand Total:</th>
+                    <th colspan="7" class="px-4 py-3 text-end text-white">Grand Total:</th>
                     <th class="px-4 py-3 text-end text-success fw-bold">₱{{ number_format($grandTotal, 2) }}</th>
                 </tr>
             </tfoot>
@@ -207,8 +214,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderRows(sales, grandTotal) {
         if (!sales.length) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-secondary py-5">No transactions found.</td></tr>';
-            tfoot.innerHTML = '<tr><th colspan="6" class="px-4 py-3 text-end text-white">Grand Total:</th>' +
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-secondary py-5">No transactions found.</td></tr>';
+            tfoot.innerHTML = '<tr><th colspan="7" class="px-4 py-3 text-end text-white">Grand Total:</th>' +
                 '<th class="px-4 py-3 text-end text-success fw-bold">\u20B10.00</th></tr>';
             return;
         }
@@ -230,12 +237,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 '<td class="px-4 py-3"><ul class="list-unstyled mb-0 small">' + items + '</ul></td>' +
                 '<td class="px-4 py-3"><span class="text-uppercase small">' + escapeHtml(sale.payment_method) + '</span></td>' +
                 '<td class="px-4 py-3 text-end text-success fw-semibold">\u20B1' + parseFloat(sale.total).toFixed(2) + '</td>' +
+                '<td class="px-4 py-3 text-center"><a href="/pos/receipt/' + sale.id + '" target="_blank" rel="noopener" class="btn btn-sm btn-outline-info" title="View / print receipt"><i class="bi bi-receipt"></i></a></td>' +
             '</tr>';
         });
 
         tbody.innerHTML = rows;
         tfoot.innerHTML = '<tr>' +
-            '<th colspan="6" class="px-4 py-3 text-end text-white">Grand Total:</th>' +
+            '<th colspan="7" class="px-4 py-3 text-end text-white">Grand Total:</th>' +
             '<th class="px-4 py-3 text-end text-success fw-bold">\u20B1' + parseFloat(grandTotal).toFixed(2) + '</th>' +
         '</tr>';
     }

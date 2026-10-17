@@ -129,6 +129,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/pos/qty', [PosController::class, 'updateQty'])->name('pos.updateQty');
     Route::post('/pos/clear', [PosController::class, 'clearCart'])->name('pos.clearCart');
     Route::post('/pos/checkout', [PosController::class, 'checkout'])->middleware('throttle:pos-checkout')->name('pos.checkout');
+    Route::get('/pos/receipt/{sale}', [PosController::class, 'receipt'])->name('pos.receipt');
 
     /*
     |--------------------------------------------------------------------------
