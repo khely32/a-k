@@ -154,4 +154,26 @@ class StockTransferCreateTest extends TestCase
             'to_branch_id' => $this->homeBranch->id,
         ]);
     }
+
+    public function test_history_page_renders_the_dark_records_card(): void
+    {
+        $owner = $this->createUser('owner', $this->homeBranch->id);
+
+        StockTransfer::create([
+            'from_branch_id' => $this->otherBranch->id,
+            'to_branch_id' => $this->homeBranch->id,
+            'product_id' => $this->product->id,
+            'quantity' => 7,
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($owner)
+            ->get('/transfer-history')
+            ->assertOk()
+            ->assertSee('All Transfer Records')
+            ->assertSee('hist-card', false)
+            ->assertSee('hist-table', false)
+            ->assertDontSee('class="card shadow"', false)
+            ->assertDontSee('class="card-body"', false);
+    }
 }

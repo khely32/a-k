@@ -16,6 +16,65 @@
         border-radius:14px;
         font-size:.9rem;
     }
+
+    /* ---------- Dark themed records card ---------- */
+    .hist-card{
+        background:rgba(30,41,59,.88);
+        backdrop-filter:blur(14px);
+        border:1px solid rgba(0,229,255,.2);
+        border-radius:20px;
+        box-shadow:0 0 20px rgba(0,229,255,.08), 0 0 40px rgba(124,58,237,.08);
+        overflow:hidden;
+    }
+    .hist-card-header{
+        color:#e2e8f0;
+        font-weight:700;
+        font-size:1.05rem;
+        letter-spacing:.5px;
+        padding:18px 22px;
+        background:rgba(15,23,42,.35);
+        border-bottom:1px solid rgba(148,163,184,.18);
+    }
+    .hist-card-body{ padding:0; }
+
+    .hist-table{
+        width:100%;
+        margin:0;
+        border-collapse:separate;
+        border-spacing:0;
+        color:#cbd5e1;
+    }
+    .hist-table thead{
+        background:linear-gradient(90deg,#111827,#1e293b);
+    }
+    .hist-table thead th{
+        color:var(--cyan);
+        font-size:.75rem;
+        font-weight:600;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+        padding:14px 16px;
+        border-bottom:1px solid rgba(0,229,255,.2);
+        white-space:nowrap;
+    }
+    .hist-table thead th.text-right{ text-align:right; }
+    .hist-table tbody td{
+        padding:14px 16px;
+        font-size:.875rem;
+        color:#cbd5e1;
+        border-bottom:1px solid rgba(148,163,184,.1);
+    }
+    .hist-table tbody tr{ transition:background .25s ease; }
+    .hist-table tbody tr:hover{ background:rgba(0,229,255,.06); }
+    .hist-table tbody tr:last-child td{ border-bottom:none; }
+    .hist-table .hist-product{ color:#f1f5f9; font-weight:500; }
+    .hist-table .hist-date{ color:#94a3b8; }
+    .hist-table .hist-qty{
+        color:var(--green);
+        font-weight:700;
+        text-align:right;
+    }
+    .hist-empty{ color:#94a3b8; }
 </style>
 <div class="container-fluid py-4">
 
@@ -47,34 +106,34 @@
         </a>
     </div>
 
-    <div class="card shadow">
-        <div class="card-header">
+    <div class="hist-card">
+        <div class="hist-card-header">
             All Transfer Records
         </div>
-        <div class="card-body">
+        <div class="hist-card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle">
+                <table class="hist-table align-middle">
                     <thead>
                         <tr>
                             <th>Date</th>
                             <th>Product</th>
                             <th>From Branch</th>
                             <th>To Branch</th>
-                            <th>Quantity</th>
+                            <th class="text-right">Quantity</th>
                         </tr>
                     </thead>
                     <tbody>
                     @forelse($transfers as $transfer)
                         <tr>
-                            <td>{{ $transfer->created_at->format('M d, Y h:i A') }}</td>
-                            <td>{{ $transfer->product->name ?? 'N/A' }}</td>
+                            <td class="hist-date">{{ $transfer->created_at->format('M d, Y h:i A') }}</td>
+                            <td class="hist-product">{{ $transfer->product->name ?? 'N/A' }}</td>
                             <td>{{ $transfer->fromBranch->name ?? 'N/A' }}</td>
                             <td>{{ $transfer->toBranch->name ?? 'N/A' }}</td>
-                            <td>{{ $transfer->quantity }}</td>
+                            <td class="hist-qty">{{ $transfer->quantity }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-4">
+                            <td colspan="5" class="text-center py-4 hist-empty">
                                 No transfer history found
                             </td>
                         </tr>
