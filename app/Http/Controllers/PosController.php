@@ -230,10 +230,14 @@ class PosController extends Controller
             });
 
             session()->forget('cart');
+
+            $sale->load(['items.product', 'branch', 'user']);
+
             return response()->json([
-                'success'     => '✅ Sale completed and stock updated!',
-                'sale_id'     => $sale->id,
-                'receipt_url' => route('pos.receipt', $sale),
+                'success'      => '✅ Sale completed and stock updated!',
+                'sale_id'      => $sale->id,
+                'receipt_url'  => route('pos.receipt', $sale),
+                'receipt_html' => view('pos.partials.receipt-card', compact('sale'))->render(),
             ]);
 
         } catch (\Exception $e) {

@@ -113,6 +113,25 @@
     </div>
 </div>
 
+<!-- ============ RECEIPT MODAL (in-page, no redirect / no new tab) ============ -->
+<div id="receipt-modal" class="receipt-modal" aria-hidden="true">
+    <div class="receipt-modal-backdrop" data-receipt-close></div>
+    <div class="receipt-modal-panel" role="dialog" aria-modal="true" aria-label="Purchase receipt">
+        <div class="receipt-modal-bar">
+            <span class="rm-title"><i class="bi bi-receipt-cutoff"></i> Sale Receipt</span>
+            <div class="rm-actions">
+                <button type="button" id="receipt-new-sale" class="rm-btn rm-new">
+                    <i class="bi bi-arrow-clockwise"></i> New Sale
+                </button>
+                <button type="button" id="receipt-print" class="rm-btn rm-print">
+                    <i class="bi bi-printer"></i> Print Receipt
+                </button>
+            </div>
+        </div>
+        <div id="receipt-modal-body" class="receipt-modal-body"></div>
+    </div>
+</div>
+
 <style>
     .pos-page{
         position:relative;
@@ -551,6 +570,93 @@
     .cart-items::-webkit-scrollbar-track{ background:transparent; }
     .pos-product-list::-webkit-scrollbar-thumb,
     .cart-items::-webkit-scrollbar-thumb{ background:rgba(0,242,254,.25); border-radius:6px; }
+
+    /* ---------- RECEIPT MODAL (in-page) ---------- */
+    .receipt-modal{
+        position:fixed;
+        inset:0;
+        z-index:2000;
+        display:none;
+        align-items:flex-start;
+        justify-content:center;
+        padding:48px 16px 40px;
+        overflow-y:auto;
+    }
+    .receipt-modal.open{ display:flex; }
+    .receipt-modal-backdrop{
+        position:fixed;
+        inset:0;
+        background:rgba(3,6,10,.8);
+        backdrop-filter:blur(7px);
+    }
+    .receipt-modal-panel{
+        position:relative;
+        z-index:1;
+        width:100%;
+        max-width:420px;
+        margin:0 auto;
+    }
+    .receipt-modal-bar{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        margin-bottom:14px;
+        padding:11px 14px;
+        background:rgba(13,17,23,.94);
+        border:1px solid rgba(0,230,118,.22);
+        border-radius:14px;
+        box-shadow:0 14px 34px rgba(0,0,0,.55);
+    }
+    .rm-title{
+        display:flex;align-items:center;gap:8px;
+        font-size:.85rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#fff;
+    }
+    .rm-title i{ color:#00e676; font-size:1rem; }
+    .rm-actions{ display:flex; gap:8px; flex-shrink:0; }
+    .rm-btn{
+        display:inline-flex;align-items:center;gap:7px;
+        font-family:inherit;font-size:.78rem;font-weight:700;
+        padding:8px 14px;border-radius:10px;cursor:pointer;border:none;
+        transition:transform .15s ease,box-shadow .15s ease,background .15s ease;
+    }
+    .rm-btn:active{ transform:scale(.97); }
+    .rm-new{
+        background:rgba(255,255,255,.06);
+        color:#dfe6f0;
+        border:1px solid rgba(255,255,255,.16);
+    }
+    .rm-new:hover{ background:rgba(0,242,254,.14); border-color:rgba(0,242,254,.5); color:#fff; }
+    .rm-print{
+        background:linear-gradient(135deg,#22c55e,#16a34a);
+        color:#fff;
+        box-shadow:0 8px 20px rgba(34,197,94,.35);
+    }
+    .rm-print:hover{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(34,197,94,.55); }
+    .receipt-modal-body .receipt{ margin:0 auto; }
+
+    /* Lock the page behind the open receipt. */
+    body.receipt-open{ overflow:hidden; }
+
+    /* In-page printing: only the receipt card reaches the paper. */
+    @media print{
+        body.receipt-open{ overflow:visible; }
+        body.receipt-open .receipt-modal,
+        body.receipt-open .receipt-modal-panel,
+        body.receipt-open .receipt-modal-bar{
+            position:static !important;
+            display:block !important;
+            padding:0 !important;
+            margin:0 !important;
+            max-width:none !important;
+            width:auto !important;
+            overflow:visible !important;
+            background:none !important;
+            border:none !important;
+            box-shadow:none !important;
+        }
+        body.receipt-open .receipt-modal-backdrop{ display:none !important; }
+    }
 </style>
 @endsection
 
@@ -747,15 +853,40 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(() => loadCart());
     });
 
+    /* ---------------- RECEIPT MODAL (in-page) ---------------- */
+    const receiptModal = $('receipt-modal');
+    const receiptBody = $('receipt-modal-body');
+
+    function openReceiptModal(html){
+        if (!receiptModal || !receiptBody) return;
+        receiptBody.innerHTML = html || '';
+        receiptModal.classList.add('open');
+        receiptModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('receipt-open');
+    }
+
+    function closeReceiptModal(){
+        if (!receiptModal) return;
+        if (receiptBody) receiptBody.innerHTML = '';
+        receiptModal.classList.remove('open');
+        receiptModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('receipt-open');
+    }
+
+    $('receipt-new-sale').addEventListener('click', closeReceiptModal);
+    $('receipt-print').addEventListener('click', function () { window.print(); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && receiptModal && receiptModal.classList.contains('open')) {
+            closeReceiptModal();
+        }
+    });
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('[data-receipt-close]')) closeReceiptModal();
+    });
+
     $('checkout-btn').addEventListener('click', function () {
         const customerIdEl = $('customer-id');
         const customerId = customerIdEl ? customerIdEl.value.trim() : '';
-
-        // Open the receipt tab up front, while we are still inside the click
-        // gesture, so the browser's popup blocker lets it through. It stays
-        // blank until the sale succeeds, and is closed again if we bail.
-        const receiptWin = window.open('about:blank', '_blank');
-
         fetch('{{ route("pos.checkout") }}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
@@ -767,27 +898,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (customerIdEl) customerIdEl.value = '';
                 loadCart();
                 loadProducts();
-                openReceipt(d.receipt_url, receiptWin);
+                openReceiptModal(d.receipt_html);
             } else {
-                if (receiptWin && !receiptWin.closed) receiptWin.close();
                 alert(d.error);
             }
         })
-        .catch(() => {
-            if (receiptWin && !receiptWin.closed) receiptWin.close();
-        });
+        .catch(() => { alert('Checkout failed. Please try again.'); });
     });
-
-    function openReceipt(url, win){
-        if (!url) return;
-        if (win && !win.closed) {
-            win.location = url;
-            try { win.focus(); } catch (e) {}
-        } else {
-            // Popup blocked: fall back to opening in the current tab.
-            window.location = url;
-        }
-    }
 
     /* ---------------- INIT ---------------- */
     loadCategories().then(loadProducts);

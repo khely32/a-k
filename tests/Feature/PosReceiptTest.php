@@ -113,6 +113,20 @@ class PosReceiptTest extends TestCase
             ->assertSee('Far Branch');
     }
 
+    public function test_pos_page_renders_the_in_page_receipt_modal(): void
+    {
+        $branch = $this->makeBranch();
+        $cashier = $this->makeUser($branch);
+
+        $this->actingAs($cashier)
+            ->get(route('pos.index'))
+            ->assertOk()
+            ->assertSee('id="receipt-modal"', false)
+            ->assertSee('id="receipt-modal-body"', false)
+            ->assertSee('id="receipt-print"', false)
+            ->assertSee('id="receipt-new-sale"', false);
+    }
+
     public function test_checkout_returns_the_receipt_url_and_persists_the_sale(): void
     {
         $branch = $this->makeBranch();
@@ -143,7 +157,10 @@ class PosReceiptTest extends TestCase
             ])
             ->postJson('/pos/checkout');
 
-        $response->assertOk()->assertJsonStructure(['success', 'sale_id', 'receipt_url']);
+        $response->assertOk()->assertJsonStructure(['success', 'sale_id', 'receipt_url', 'receipt_html']);
+
+        $this->assertStringContainsString('receipt-modal-content', $response->json('receipt_html'));
+        $this->assertStringContainsString('Engine Oil', $response->json('receipt_html'));
 
         $this->assertDatabaseHas('sales', ['total_amount' => 224.00]);
         $this->assertSame(3, (int) Inventory::first()->fresh()->quantity);
