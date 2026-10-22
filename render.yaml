@@ -5,6 +5,11 @@ services:
     repo: https://github.com/khely32/a-k
     plan: free  # web services spin down after 15 min on free; upgrade to "starter" for always-on
     dockerfilePath: ./Dockerfile.render
+    # /up is registered outside the "web" middleware group, so it answers 200
+    # as long as PHP is alive - even while the database is down. Pointing the
+    # health check at a database-dependent path would make Render restart the
+    # container every 60s instead of letting it recover on its own.
+    healthCheckPath: /up
     envVars:
       - key: APP_ENV
         value: production
