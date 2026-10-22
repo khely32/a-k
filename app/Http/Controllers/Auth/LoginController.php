@@ -75,7 +75,10 @@ class LoginController extends Controller
             'password'         => 'required|string|min:6|confirmed',
             'role'             => 'required|in:owner,staff',
             'branch'           => 'nullable|string|max:255',
-            'security_contact' => 'required|string|max:255',
+            // Optional: the registration form no longer collects a security
+            // contact. Password recovery is handled by an emailed code instead
+            // (see ForgotPasswordController), so nothing depends on this value.
+            'security_contact' => 'nullable|string|max:255',
         ]);
 
         if ($request->role === 'owner') {

@@ -91,8 +91,6 @@
         .error-alert li{font-size:.8rem;color:#ef4444;padding:2px 0}
         @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
-        .hint{display:block;margin-top:6px;font-size:.68rem;letter-spacing:1px;color:rgba(255,255,255,.28)}
-
         .btn-login{width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--red),#dc2626);color:#fff;font-family:'Rajdhani',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;transition:all .3s;margin-top:8px}
         .btn-login:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(239,68,68,.4)}
         .btn-login:active{transform:translateY(0)}
@@ -222,20 +220,6 @@
                     <button type="button" class="pw-toggle" id="togglePasswordConfirm" aria-label="Show password confirmation">
                         <i class="bi bi-eye" id="passwordConfirmEyeIcon"></i>
                     </button>
-                </div>
-
-                <div class="fg">
-                    <label for="security_contact">Security Contact</label>
-                    <input
-                        type="text"
-                        name="security_contact"
-                        id="security_contact"
-                        value="{{ old('security_contact') }}"
-                        placeholder="secondary@gmail.com or 0917xxxxxxx"
-                        autocomplete="off"
-                        required>
-                    <i class="bi bi-shield-lock fi"></i>
-                    <small class="hint">Email or phone &mdash; used for password recovery verification</small>
                 </div>
 
                 <div class="fg">
