@@ -4,6 +4,9 @@ on:
   push:
     branches: [main, docker-ize, render-deploy]
   pull_request:
+  # Lets CI be run by hand on any ref - e.g. to publish a check run on a
+  # commit that was pushed by GITHUB_TOKEN (those pushes trigger no workflow).
+  workflow_dispatch:
 
 jobs:
   lint-and-tests:

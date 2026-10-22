@@ -3,8 +3,14 @@ services:
     name: ak-web
     runtime: docker
     repo: https://github.com/khely32/a-k
+    branch: main  # deploy from the branch the auto-deploy workflow fast-forwards into
     plan: free  # web services spin down after 15 min on free; upgrade to "starter" for always-on
     dockerfilePath: ./Dockerfile.render
+    # Deploy on every commit that lands on the linked branch. The default
+    # ("checksPass") waits for CI checks on that branch, but the auto-deploy
+    # workflow pushes to main with GITHUB_TOKEN, which never triggers a CI
+    # run - so the deploy would wait forever for checks that never run.
+    autoDeployTrigger: commit
     # /up is registered outside the "web" middleware group, so it answers 200
     # as long as PHP is alive - even while the database is down. Pointing the
     # health check at a database-dependent path would make Render restart the
