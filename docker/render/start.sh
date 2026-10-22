@@ -108,6 +108,7 @@ log "waiting for the database..."
 
 DB_READY=0
 ATTEMPT=0
+DB_WARNED=0
 DEADLINE=$(( SECONDS + DB_READY_TIMEOUT ))
 
 while true; do
@@ -127,7 +128,17 @@ while true; do
         break
     fi
 
-    if [ "$SECONDS" -ge "$DEADLINE" ]; then
+    if [ "$SECONDS" -lt "$DEADLINE" ]; then
+        # Still inside the initial window: report every attempt.
+        log "[db] attempt ${ATTEMPT}: $(echo "$DBOUT" | tail -n 1)"
+        sleep 3
+        continue
+    fi
+
+    # Past the initial window the database is not coming back quickly, so
+    # print the cause once and then keep retrying quietly.
+    if [ "$DB_WARNED" -eq 0 ]; then
+        DB_WARNED=1
         warn "database unreachable after ${ATTEMPT} attempts / ${DB_READY_TIMEOUT}s."
         warn "Last error: $(echo "$DBOUT" | tail -n 1)"
         warn "Check in the Render dashboard:"
@@ -135,15 +146,9 @@ while true; do
         warn "  - the database is not suspended (free tiers auto-pause when idle)"
         warn "  - the database is not over its storage/compute quota"
         warn "  - DB_SSLMODE matches your provider (Neon requires 'require')"
-        warn "The container stays up and keeps serving 503 + Retry-After."
-        warn "Retrying every ${DB_RETRY_INTERVAL}s - the site will recover on its own."
-        DEADLINE=$(( SECONDS + 60 ))
-        sleep "$DB_RETRY_INTERVAL"
-        continue
     fi
-
-    log "[db] attempt ${ATTEMPT}: $(echo "$DBOUT" | tail -n 1)"
-    sleep 3
+    warn "still waiting for the database (attempt ${ATTEMPT}) - serving 503, retrying in ${DB_RETRY_INTERVAL}s."
+    sleep "$DB_RETRY_INTERVAL"
 done
 
 # ---------------------------------------------------------------------------
@@ -151,6 +156,7 @@ done
 # ---------------------------------------------------------------------------
 DEADLINE=$(( SECONDS + DB_READY_TIMEOUT ))
 log "applying migrations..."
+MIG_WARNED=0
 
 while true; do
     if MIG=$(php artisan migrate --force 2>&1); then
@@ -158,18 +164,20 @@ while true; do
         break
     fi
 
-    if [ "$SECONDS" -ge "$DEADLINE" ]; then
-        warn "migrations kept failing until the deadline:"
-        echo "$MIG" | tail -n 20 >&2
-        warn "The container stays up and keeps serving 503 + Retry-After."
-        warn "Retrying every ${DB_RETRY_INTERVAL}s - the site will recover on its own."
-        DEADLINE=$(( SECONDS + 60 ))
-        sleep "$DB_RETRY_INTERVAL"
+    if [ "$SECONDS" -lt "$DEADLINE" ]; then
+        log "[migrate] failed, retrying: $(echo "$MIG" | tail -n 1)"
+        sleep 5
         continue
     fi
 
-    log "[migrate] failed, retrying: $(echo "$MIG" | tail -n 1)"
-    sleep 5
+    if [ "$MIG_WARNED" -eq 0 ]; then
+        MIG_WARNED=1
+        warn "migrations keep failing:"
+        echo "$MIG" | tail -n 20 >&2
+        warn "The container stays up and keeps serving 503 + Retry-After."
+    fi
+    warn "still waiting for the migrations to apply - retrying in ${DB_RETRY_INTERVAL}s."
+    sleep "$DB_RETRY_INTERVAL"
 done
 
 # ---------------------------------------------------------------------------
