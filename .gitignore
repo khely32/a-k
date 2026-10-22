@@ -25,3 +25,9 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Local debug scratch files (never commit these)
+/reprologin.php
+/public/diagnose.php
+/ngrok.exe
+/dashboard-metrics.html

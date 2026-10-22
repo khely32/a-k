@@ -22,7 +22,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
 
-        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        // Global middleware is registered as an explicit array of class
+        // strings - never a closure. A closure that returns void/null here
+        // leaves the kernel without a Response to send, which the browser
+        // reports as ERR_INVALID_RESPONSE. SecurityHeaders always coerces
+        // its return value into a Symfony Response for the same reason.
+        $middleware->append([
+            \App\Http\Middleware\SecurityHeaders::class,
+        ]);
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
