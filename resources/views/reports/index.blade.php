@@ -105,6 +105,26 @@
 }
 .rpt-filter input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
+    cursor: pointer;
+}
+.rpt-filter input[type="date"] {
+    flex: 1;
+    min-width: 0;
+}
+.rpt-filter .neon-btn {
+    background: transparent;
+    color: var(--r-accent);
+    border: 1px solid var(--r-accent);
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    height: 34px;
+    transition: 0.2s;
+}
+.rpt-filter .neon-btn:hover {
+    background: var(--r-accent);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(255, 46, 85, 0.35);
 }
 .rpt-auto {
     margin-left: auto;
@@ -712,9 +732,14 @@
         </select>
     </div>
     <div style="flex:1;max-width:220px">
-        <label>Reporting Period</label>
-        <div class="form-control d-flex align-items-center" style="color:var(--r-muted);cursor:default">
-            <i class="bi bi-calendar-day" style="margin-right:6px"></i>{{ \Carbon\Carbon::now('Asia/Manila')->format('M d, Y') }} (Today)
+        <label for="filter-date">Reporting Date</label>
+        <div class="d-flex align-items-center gap-2">
+            <input type="date" id="filter-date" class="form-control"
+                   value="{{ $reportDateIso }}"
+                   max="{{ \Carbon\Carbon::now('Asia/Manila')->format('Y-m-d') }}"
+                   aria-label="Filter reports by date">
+            <button type="button" id="filter-date-today" class="neon-btn" style="padding:6px 10px;white-space:nowrap"
+                    title="Jump back to today">Today</button>
         </div>
     </div>
     <div class="rpt-auto"><span class="dot"></span> Auto-refreshing</div>
@@ -769,9 +794,9 @@
     <div class="col-md-6">
         <div class="rpt-val-card">
             <div class="rpt-val-left">
-                <div class="rpt-val-label"><i class="bi bi-currency-dollar" style="margin-right:3px"></i> Total Revenue (Today)</div>
+                <div class="rpt-val-label" id="kpi-revenue-label"><i class="bi bi-currency-dollar" style="margin-right:3px"></i> Total Revenue ({{ $reportDateLabel }})</div>
                 <div class="rpt-val-num green" id="kpi-revenue">₱{{ number_format($totalRevenue, 2) }}</div>
-                <div class="rpt-val-sub">Resets to zero at midnight</div>
+                <div class="rpt-val-sub" id="kpi-revenue-sub">{{ $isReportDateToday ? 'Resets to zero at midnight' : 'Revenue recorded on the selected date' }}</div>
             </div>
             <div class="rpt-val-chart"><canvas id="revSparkline"></canvas></div>
         </div>
@@ -859,11 +884,11 @@
 
         <div class="di-live" id="di-live">
             <div class="di-live-item">
-                <span class="di-live-label"><i class="bi bi-broadcast"></i> Today</span>
+                <span class="di-live-label" id="di-live-today-label"><i class="bi bi-broadcast"></i> Today</span>
                 <span class="di-live-val" id="di-live-today">&#8369;0.00</span>
             </div>
             <div class="di-live-item">
-                <span class="di-live-label">Today Transactions</span>
+                <span class="di-live-label" id="di-live-today-txn-label">Today Transactions</span>
                 <span class="di-live-val di-txn" id="di-live-today-txn">0</span>
             </div>
             <div class="di-live-item">
@@ -1000,6 +1025,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var R = '#FF2E55', G = '#00E676', Y = '#FFC107', B = '#00E5FF', P = '#D500F9';
     var fontColor = '#8A8F9E';
     var lineChart, pieChart, revSpark, invSpark, branchChart;
+
+    var dateFilter = document.getElementById('filter-date');
+    var todayBtn = document.getElementById('filter-date-today');
+    var todayIso = '{{ \Carbon\Carbon::now('Asia/Manila')->format('Y-m-d') }}';
+    var reportDate = dateFilter ? (dateFilter.value || todayIso) : todayIso;
 
     function makeSparkline(canvasId, color) {
         var ctx = document.getElementById(canvasId);
@@ -1157,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var body = document.getElementById('di-body');
         if (!body) return;
 
-        fetch('{{ route("reports.daily-income") }}?days=' + diDays + '&branch=' + encodeURIComponent(diBranch))
+        fetch('{{ route("reports.daily-income") }}?days=' + diDays + '&branch=' + encodeURIComponent(diBranch) + '&date=' + encodeURIComponent(reportDate))
             .then(function (r) { return r.json(); })
             .then(function (d) { renderDailyIncome(d); })
             .catch(function (e) {
@@ -1174,12 +1204,22 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderDailyIncomeLive(d) {
         var today = d.today || {};
         var scope = d.branch_label || 'All Branches';
+        var isAnchorToday = !!d.is_anchor_today;
+        var anchorLabel = d.anchor_label || 'Selected Day';
 
         setDiText('di-scope', scope);
+
+        var todayLabel = document.getElementById('di-live-today-label');
+        if (todayLabel) {
+            todayLabel.innerHTML = '<i class="bi bi-broadcast"></i> ' + (isAnchorToday ? 'Today' : escapeHtml(anchorLabel));
+        }
+        setDiText('di-live-today-txn-label', (isAnchorToday ? 'Today' : 'Selected Day') + ' Transactions');
+
         setDiText('di-live-today', '₱' + formatNum(today.total || 0));
         setDiText('di-live-today-txn', today.transactions || 0);
         setDiText('di-live-period', '₱' + formatNum(d.period_total || 0));
-        setDiText('di-live-period-label', 'Period Total (' + d.days + ' Days · ' + scope + ')');
+        var periodAnchor = isAnchorToday ? 'Today' : escapeHtml(anchorLabel);
+        setDiText('di-live-period-label', 'Period Total (' + d.days + ' Days · ' + periodAnchor + ' · ' + scope + ')');
 
         var stamp = new Date();
         setDiText('di-live-updated', 'Updated ' + stamp.toLocaleTimeString('en', {
@@ -1296,6 +1336,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function applyData(d) {
+        var revLabel = document.getElementById('kpi-revenue-label');
+        if (revLabel && d.reportDateLabel) {
+            revLabel.innerHTML = '<i class="bi bi-currency-dollar" style="margin-right:3px"></i> Total Revenue (' + escapeHtml(d.reportDateLabel) + ')';
+        }
+        var revSub = document.getElementById('kpi-revenue-sub');
+        if (revSub) {
+            revSub.textContent = d.isReportDateToday
+                ? 'Resets to zero at midnight'
+                : 'Revenue recorded on the selected date';
+        }
+
         document.getElementById('kpi-products').textContent = d.totalProducts;
         document.getElementById('kpi-inventory').textContent = d.totalInventory;
         document.getElementById('kpi-lowstock').textContent = d.lowStockProducts;
@@ -1339,6 +1390,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var params = new URLSearchParams();
         params.set('branch_id', branchId);
+        params.set('date', reportDate);
 
         fetch('{{ route("reports.data") }}?' + params.toString())
             .then(function (res) { return res.json(); })
@@ -1348,6 +1400,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('filter-branch').addEventListener('change', fetchData);
 
+    function refreshForDate() {
+        reportDate = (dateFilter && dateFilter.value) ? dateFilter.value : todayIso;
+        fetchData();
+        if (typeof fetchDailyIncome === 'function') fetchDailyIncome();
+        if (typeof fetchBranchAnalytics === 'function') fetchBranchAnalytics();
+    }
+
+    if (dateFilter) {
+        dateFilter.addEventListener('change', refreshForDate);
+    }
+
+    if (todayBtn) {
+        todayBtn.addEventListener('click', function () {
+            if (dateFilter) dateFilter.value = todayIso;
+            refreshForDate();
+        });
+    }
+
     setInterval(fetchData, 5000);
 
     /* ═══ Branch Analytics ═══ */
@@ -1356,7 +1426,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var baFont = '#8A8F9E';
 
     function fetchBranchAnalytics() {
-        fetch('{{ route("reports.branch-analytics") }}?branch_id=all')
+        fetch('{{ route("reports.branch-analytics") }}?branch_id=all&date=' + encodeURIComponent(reportDate))
             .then(function(r){ return r.json(); })
             .then(function(d){ renderBranchAnalytics(d); })
             .catch(function(e){ console.error('Branch analytics error:', e); });

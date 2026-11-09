@@ -24,8 +24,9 @@ class ReportController extends Controller
         $branches = Branch::orderBy('branch_name')->get();
 
         $branchId = $request->get('branch_id', 'all');
+        $reportDate = $this->resolveReportDate($request->get('date'));
 
-        $data = $this->getReportData($branchId);
+        $data = $this->getReportData($branchId, $reportDate);
 
         $user = Auth::user();
         $userBranchId = (int) $user->branch_id;
@@ -40,6 +41,46 @@ class ReportController extends Controller
         )));
     }
 
+    /**
+     * Normalise a date filter coming from the reports calendar. Invalid or
+     * missing values fall back to the current business day.
+     */
+    private function resolveReportDate($date): Carbon
+    {
+        $today = Carbon::now('Asia/Manila')->startOfDay();
+
+        if (! is_string($date) || trim($date) === '') {
+            return $today;
+        }
+
+        $date = trim($date);
+
+        try {
+            $parsed = Carbon::createFromFormat('!Y-m-d', $date, 'Asia/Manila')->startOfDay();
+        } catch (\Exception $e) {
+            return $today;
+        }
+
+        // createFromFormat() rolls invalid dates over (e.g. 2026-02-31), so
+        // verify the round-trip before trusting the value.
+        return $parsed->format('Y-m-d') === $date ? $parsed : $today;
+    }
+
+    private function reportDateLabel(Carbon $date): string
+    {
+        $today = Carbon::now('Asia/Manila')->startOfDay();
+
+        if ($date->isSameDay($today)) {
+            return 'Today';
+        }
+
+        if ($date->isSameDay($today->copy()->subDay())) {
+            return 'Yesterday';
+        }
+
+        return $date->format('M d, Y');
+    }
+
     public function reportData(Request $request)
     {
         if (Auth::user()->role !== 'owner') {
@@ -47,8 +88,9 @@ class ReportController extends Controller
         }
 
         $branchId = $request->get('branch_id', 'all');
+        $reportDate = $this->resolveReportDate($request->get('date'));
 
-        $raw = $this->getReportData($branchId);
+        $raw = $this->getReportData($branchId, $reportDate);
 
         $raw['topProducts'] = $raw['topProducts']->map(function ($item) {
             $product = $item->product ?? null;
@@ -90,9 +132,10 @@ class ReportController extends Controller
             }
         }
 
+        $anchor = $this->resolveReportDate($request->get('date'));
         $todayStart = Carbon::now('Asia/Manila')->startOfDay();
-        $rangeStart = $todayStart->copy()->subDays($days - 1);
-        $rangeEnd = $todayStart->copy()->addDay();
+        $rangeStart = $anchor->copy()->subDays($days - 1)->startOfDay();
+        $rangeEnd = $anchor->copy()->addDay()->startOfDay();
 
         $query = Sale::where('created_at', '>=', $rangeStart)
             ->where('created_at', '<', $rangeEnd);
@@ -190,11 +233,14 @@ class ReportController extends Controller
 
         $periodTotal = array_sum(array_column($list, 'total'));
 
-        $todayBucket = $buckets[$todayKey] ?? ['transactions' => 0, 'total' => 0.0];
+        $todayBucket = $buckets[$anchor->format('Y-m-d')] ?? ['transactions' => 0, 'total' => 0.0];
         $periodTransactions = array_sum(array_column($list, 'transactions'));
 
         return response()->json([
             'days'         => $days,
+            'anchor'       => $anchor->format('Y-m-d'),
+            'anchor_label' => $this->reportDateLabel($anchor),
+            'is_anchor_today' => $anchor->isSameDay($todayStart),
             'period_total' => round($periodTotal, 2),
             'period_txn'   => $periodTransactions,
             'max'          => round($max, 2),
@@ -210,8 +256,15 @@ class ReportController extends Controller
         ]);
     }
 
-    private function getReportData($branchId)
+    private function getReportData($branchId, ?Carbon $reportDate = null)
     {
+        $reportDate = $reportDate
+            ? $reportDate->copy()->startOfDay()
+            : Carbon::now('Asia/Manila')->startOfDay();
+
+        $dayStart = $reportDate->copy()->startOfDay();
+        $dayEnd = $reportDate->copy()->addDay()->startOfDay();
+
         $isAll = ($branchId === 'all' || $branchId === null);
 
         if ($isAll) {
@@ -240,7 +293,9 @@ class ReportController extends Controller
 
             $pendingTransfers = StockTransfer::where('status', 'pending')->count();
 
-            $totalRevenue = Sale::today()->sum('total_amount');
+            $totalRevenue = Sale::where('created_at', '>=', $dayStart)
+                ->where('created_at', '<', $dayEnd)
+                ->sum('total_amount');
 
             $inventoryValue = Inventory::join('products', 'inventories.product_id', '=', 'products.id')
                 ->selectRaw('SUM(inventories.quantity * products.price) as total')
@@ -282,7 +337,10 @@ class ReportController extends Controller
                       ->orWhere('to_branch_id', $branchId);
                 })->count();
 
-            $totalRevenue = Sale::where('branch_id', $branchId)->today()->sum('total_amount');
+            $totalRevenue = Sale::where('branch_id', $branchId)
+                ->where('created_at', '>=', $dayStart)
+                ->where('created_at', '<', $dayEnd)
+                ->sum('total_amount');
 
             $inventoryValue = (clone $invQuery)
                 ->join('products', 'inventories.product_id', '=', 'products.id')
@@ -330,7 +388,11 @@ class ReportController extends Controller
             'lowStock',
             'outOfStock',
             'branchStocks'
-        );
+        ) + [
+            'reportDateIso'     => $reportDate->format('Y-m-d'),
+            'reportDateLabel'   => $this->reportDateLabel($reportDate),
+            'isReportDateToday' => $reportDate->isSameDay(Carbon::now('Asia/Manila')),
+        ];
     }
 
     public function sales(Request $request)
@@ -473,7 +535,7 @@ class ReportController extends Controller
 
         $branchId = $request->get('branch_id', 'all');
         $months = 6;
-        $now = Carbon::now('Asia/Manila');
+        $now = $this->resolveReportDate($request->get('date'));
 
         $palette = ['#10B981', '#06B6D4', '#F59E0B', '#8B5CF6', '#F43F5E', '#6366F1'];
 
@@ -558,6 +620,7 @@ class ReportController extends Controller
 
         return response()->json([
             'months'      => $monthLabels,
+            'anchor'      => $now->format('Y-m-d'),
             'branches'    => $analytics,
             'comparison'  => $comparison,
         ]);
